@@ -176,7 +176,10 @@
     border:2px dashed transparent;
     transition:border-color .2s ease;
   }
-  .grid.custom-mode .slot{ border-color:rgba(232,220,200,.25); }
+  /* Dashed placeholder outlines live behind every card at all times, but only
+     become visible while something is actually moving (dragging, or the
+     gather/deal animation into Custom) — not just because Custom is selected. */
+  .grid.show-slots .slot{ border-color:rgba(232,220,200,.25); }
 
   .card{
     position:absolute;
@@ -329,12 +332,12 @@
     width:min(280px, 80vw); height:100%;
     background:#0d0608; border-right:1px solid var(--card-border);
     padding:60px 20px 20px;
-    display:flex; flex-direction:column; gap:6px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
     animation:slideIn .2s ease;
   }
   @keyframes slideIn{ from{ transform:translateX(-100%); } to{ transform:translateX(0); } }
   .menu-panel a, .menu-panel button.menu-link{
-    display:block; text-align:left;
+    display:block; text-align:center;
     background:none; border:none; color:var(--bone);
     font-family:inherit; font-size:16px; letter-spacing:.3px;
     padding:12px 10px; border-radius:8px; cursor:pointer; text-decoration:none;
@@ -774,6 +777,7 @@ function applySortChange() {
   if (state.isAnimating) return;
   state.isAnimating = true;
   grid.classList.toggle('custom-mode', state.mode === 'custom');
+  grid.classList.toggle('show-slots', state.mode === 'custom');
   document.getElementById('dir-toggle').disabled = state.mode === 'custom';
   document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
 
@@ -812,6 +816,7 @@ function applySortChange() {
 
     setTimeout(() => {
       allCards.forEach(card => { card.style.zIndex = ''; card.style.transition = 'transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease'; });
+      grid.classList.remove('show-slots');
       state.order = newOrder;
       state.isAnimating = false;
       saveState();
@@ -833,6 +838,7 @@ function attachDragHandlers(card, codeId) {
     longPressTimer = null;
     card.classList.remove('pressing', 'dragging');
     card.style.touchAction = '';
+    grid.classList.remove('show-slots');
     if (pointerId != null) {
       try { card.releasePointerCapture(pointerId); } catch (e) {}
     }
@@ -850,6 +856,9 @@ function attachDragHandlers(card, codeId) {
     // Take over the gesture from the browser's native scroll handling now
     // that it's a confirmed long-press-to-drag, not a swipe-to-scroll.
     card.style.touchAction = 'none';
+    // Only reveal the dashed drop-target outlines while a card is actually
+    // being dragged — not just because Custom mode is selected.
+    grid.classList.add('show-slots');
     if (!state.customOrder || state.mode !== 'custom') {
       state.customOrder = state.order.slice();
     }
