@@ -8,12 +8,29 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nosifer&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg-0:#050304; --blood-bright:#ff2a3a; --pumpkin:#ff7518; --bone:#e8dcc8; --muted:#7a6d68; --card-border:#3a1015; }
+  :root{ --bg-0:#050304; --blood-bright:#ff2a3a; --pumpkin:#ff7518; --bone:#e8dcc8; --muted:#7a6d68; --card-bg:#140a0c; --card-border:#3a1015; }
   *{ box-sizing:border-box; }
   html,body{ min-height:100%; margin:0; background:var(--bg-0); color:var(--bone); font-family:'Oswald','Segoe UI',sans-serif; }
-  .wrap{ max-width:640px; margin:0 auto; padding:8vh 20px; text-align:center; }
-  h1{ font-family:'Nosifer',cursive; font-size:clamp(24px,5vw,40px); color:var(--blood-bright); text-shadow:0 0 12px rgba(255,42,58,.5); margin:0 0 24px; }
-  p{ line-height:1.6; color:var(--muted); font-size:15px; }
+  .wrap{ max-width:640px; margin:0 auto; padding:8vh 20px 6vh; text-align:center; }
+  h1{ font-family:'Nosifer',cursive; font-size:clamp(24px,5vw,40px); color:var(--blood-bright); text-shadow:0 0 12px rgba(255,42,58,.5); margin:0 0 8px; }
+  .tagline{ color:var(--muted); font-size:14px; letter-spacing:.5px; margin:0 0 40px; }
+
+  .project-card{
+    display:block; text-align:left;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px;
+    padding:24px; text-decoration:none; color:var(--bone);
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .project-card:hover{ border-color:var(--pumpkin); transform:translateY(-2px); }
+  .project-logo-wrap{
+    display:flex; justify-content:center; align-items:center;
+    background:#fff; border-radius:10px; padding:18px 20px; margin-bottom:18px;
+  }
+  .project-logo-wrap img{ display:block; width:100%; max-width:240px; height:auto; }
+  .project-desc{ line-height:1.65; color:var(--bone); font-size:14.5px; margin:0 0 14px; }
+  .project-link{ font-size:14px; color:var(--pumpkin); font-weight:600; }
+  .project-card:hover .project-link{ color:var(--blood-bright); }
+
   .back{ display:inline-block; margin-top:32px; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
   .back:hover{ border-color:var(--blood-bright); }
 </style>
@@ -21,7 +38,21 @@
 <body>
   <div class="wrap">
     <h1>More Projects</h1>
-    <p>Other projects will be listed here soon.</p>
+    <p class="tagline">Other things I've built</p>
+
+    <a class="project-card" href="https://myshiftx.com" target="_blank" rel="noopener">
+      <div class="project-logo-wrap">
+        <img src="https://myshiftx.com/logos/MyShiftX-Full-Logo-Gradient.svg" alt="MyShiftX logo">
+      </div>
+      <p class="project-desc">MyShiftX replaces the messy, chaotic ways hourly teams swap shifts.
+        Instead of tracking trades across fragmented group chats, buried text threads, or paper
+        sign-up sheets in a breakroom, we give teams a dedicated, searchable board to organize their
+        schedules, post a shift you need covered, request one you want to pick up, and keep it all on
+        one calendar. The in-app messaging and notifications means you don't miss a thing. Plus, it's
+        free!</p>
+      <span class="project-link">Visit MyShiftX.com &rarr;</span>
+    </a>
+
     <a class="back" href="index.html">&larr; Back to wait times</a>
   </div>
 </body>
