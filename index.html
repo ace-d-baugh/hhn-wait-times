@@ -471,7 +471,7 @@ const state = {
 };
 
 for (const h of HOUSES) {
-  state.houseState[h.codeId] = { completed: false, lastWait: null };
+  state.houseState[h.codeId] = { completed: false, lastWait: null, trend: null };
 }
 
 function encodeState() {
@@ -518,7 +518,8 @@ function loadState() {
     if (Number.isNaN(codeId) || !state.houseState[codeId]) continue;
     state.houseState[codeId] = {
       completed,
-      lastWait: (wait === NO_WAIT_SENTINEL) ? null : wait
+      lastWait: (wait === NO_WAIT_SENTINEL) ? null : wait,
+      trend: null
     };
     positions[codeId] = position;
   }
@@ -756,14 +757,17 @@ function renderContent() {
       unit.textContent = 'min';
       waitRow.appendChild(unit);
 
-      const prevWait = hs.lastWait;
-      if (typeof prevWait === 'number' && prevWait !== info.wait) {
+      // hs.trend is set once per poll (see updateWaitTrends()) — reading it
+      // here, rather than comparing wait values on every render, is what
+      // keeps the arrow showing across re-renders (toggling completion,
+      // dragging, etc.) instead of only for the single render right after
+      // the change was detected.
+      if (hs.trend) {
         const arrow = document.createElement('span');
-        arrow.className = 'trend-arrow ' + (info.wait > prevWait ? 'up' : 'down');
-        arrow.textContent = info.wait > prevWait ? '▲' : '▼';
+        arrow.className = 'trend-arrow ' + hs.trend;
+        arrow.textContent = hs.trend === 'up' ? '▲' : '▼';
         waitRow.appendChild(arrow);
       }
-      hs.lastWait = info.wait;
     } else if (info.text) {
       const num = document.createElement('span');
       num.className = 'wait-num';
@@ -1088,6 +1092,22 @@ function startCountdown() {
   }, 1000);
 }
 
+// Runs once per successful poll (not on every re-render) to decide each
+// house's trend arrow. hs.trend only changes when the wait time itself
+// changes, so it stays visible across unrelated re-renders (toggling
+// completion, dragging, switching sort) until the next real change.
+function updateWaitTrends() {
+  for (const house of HOUSES) {
+    const { info } = getHouseInfo(house);
+    const hs = state.houseState[house.codeId];
+    if (typeof info.wait !== 'number') continue;
+    if (typeof hs.lastWait === 'number' && hs.lastWait !== info.wait) {
+      hs.trend = info.wait > hs.lastWait ? 'up' : 'down';
+    }
+    hs.lastWait = info.wait;
+  }
+}
+
 async function poll() {
   const dot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
@@ -1098,6 +1118,7 @@ async function poll() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     state.entities = data.liveData || [];
+    updateWaitTrends();
 
     if (state.mode !== 'custom' && !state.isAnimating) {
       const newOrder = computeOrder(state.mode, state.direction);
