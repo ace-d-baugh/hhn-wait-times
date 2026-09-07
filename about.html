@@ -27,7 +27,8 @@
   .legend{ display:flex; flex-wrap:wrap; gap:10px 20px; margin:16px 0 8px; font-size:13.5px; color:var(--bone); }
   .legend span{ display:inline-flex; align-items:center; gap:7px; }
   .legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; flex:0 0 auto; }
-  .back{ display:inline-block; margin-top:36px; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
+  .back-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:36px; }
+  .back{ display:inline-block; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
   .back:hover{ border-color:var(--blood-bright); }
   .kofi-slot{ display:flex; justify-content:center; margin-top:32px; }
   .footer-note{ text-align:center; margin-top:8px; }
@@ -101,7 +102,10 @@
         </a>
       </div>
 
-      <a class="back" href="index.html">&larr; Back to wait times</a>
+      <div class="back-row">
+        <a class="back" href="index.html">&larr; Back to wait times</a>
+        <a class="back" href="projects.html">More Projects &rarr;</a>
+      </div>
     </div>
   </div>
 </body>
