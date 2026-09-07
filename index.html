@@ -1054,10 +1054,12 @@ document.getElementById('menu-overlay').addEventListener('click', (e) => {
   if (e.target.id === 'menu-overlay') e.currentTarget.hidden = true;
 });
 
+const SHARE_URL = 'https://digitalelegance.com/hhn';
+
 function showShare() {
   const link = document.getElementById('share-link');
-  link.textContent = location.href;
-  link.href = location.href;
+  link.textContent = SHARE_URL;
+  link.href = SHARE_URL;
   document.getElementById('share-overlay').hidden = false;
 }
 document.getElementById('menu-share-btn').addEventListener('click', () => {
