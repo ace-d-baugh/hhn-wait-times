@@ -8,26 +8,75 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nosifer&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg-0:#050304; --blood-bright:#ff2a3a; --pumpkin:#ff7518; --bone:#e8dcc8; --muted:#7a6d68; --card-border:#3a1015; }
+  :root{ --bg-0:#050304; --blood-bright:#ff2a3a; --pumpkin:#ff7518; --sick-green:#7ef542; --bone:#e8dcc8; --muted:#7a6d68; --card-bg:#140a0c; --card-border:#3a1015; }
   *{ box-sizing:border-box; }
   html,body{ min-height:100%; margin:0; background:var(--bg-0); color:var(--bone); font-family:'Oswald','Segoe UI',sans-serif; }
-  .wrap{ max-width:640px; margin:0 auto; padding:8vh 20px; text-align:center; }
-  h1{ font-family:'Nosifer',cursive; font-size:clamp(24px,5vw,40px); color:var(--blood-bright); text-shadow:0 0 12px rgba(255,42,58,.5); margin:0 0 24px; }
-  p{ line-height:1.6; color:var(--muted); font-size:15px; }
-  .back{ display:inline-block; margin-top:32px; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
+  .wrap{ max-width:640px; margin:0 auto; padding:8vh 20px 6vh; }
+  header{ text-align:center; }
+  h1{ font-family:'Nosifer',cursive; font-size:clamp(24px,5vw,40px); color:var(--blood-bright); text-shadow:0 0 12px rgba(255,42,58,.5); margin:0 0 8px; }
+  .tagline{ color:var(--muted); font-size:14px; letter-spacing:.5px; margin:0 0 40px; }
+  h2{ font-size:15px; letter-spacing:1.5px; text-transform:uppercase; color:var(--pumpkin); margin:36px 0 14px; }
+  p{ line-height:1.7; color:var(--bone); font-size:15px; margin:0 0 14px; }
+  p.muted{ color:var(--muted); font-size:14px; }
+  ul.howto{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  ul.howto li{
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px;
+    padding:14px 16px; line-height:1.6; font-size:14.5px; color:var(--bone);
+  }
+  ul.howto b{ color:var(--pumpkin); }
+  .legend{ display:flex; flex-wrap:wrap; gap:10px 20px; margin:16px 0 8px; font-size:13.5px; color:var(--bone); }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; flex:0 0 auto; }
+  .back{ display:inline-block; margin-top:36px; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
   .back:hover{ border-color:var(--blood-bright); }
-  .kofi-slot{ display:flex; justify-content:center; margin-top:28px; }
+  .kofi-slot{ display:flex; justify-content:center; margin-top:32px; }
+  .footer-note{ text-align:center; margin-top:8px; }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>About</h1>
-    <p>This page is still being built. Check back soon for the story behind this dashboard.</p>
-    <div class="kofi-slot">
-      <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-      <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+    <header>
+      <h1>About</h1>
+      <p class="tagline">Why this exists, and how to use it</p>
+    </header>
+
+    <p>I made this because I wanted one glance at every Halloween Horror Nights house's wait time — not
+    a phone app to open, tap through, and wait to load for each house individually. Just one screen,
+    all the houses, updated live.</p>
+
+    <h2>How to use it</h2>
+    <ul class="howto">
+      <li><b>Wait times update automatically</b> every 30 seconds. No need to refresh.</li>
+      <li><b>Sort</b> the houses by Wait Time, Alphabetical, or Custom order from the dropdown up top.
+        The <b>A→Z / Z→A</b> button next to it flips the direction.</li>
+      <li><b>Tap a house</b> to mark it done once you've gone through it — it grays out and gets a
+        checkmark. Tap it again to undo.</li>
+      <li><b>Long-press and drag</b> a house to put it wherever you want. This switches Sort to Custom
+        automatically so your order sticks.</li>
+      <li>A <b style="color:var(--blood-bright)">red ▲</b> or <b style="color:var(--sick-green)">green ▼</b>
+        next to a wait time means it went up or down since the last check.</li>
+      <li>Everything you set — sort order, custom positions, houses marked done — is remembered on your
+        device, so it's still there next time you open the page.</li>
+    </ul>
+
+    <h2>Color key</h2>
+    <div class="legend">
+      <span><i style="background:var(--sick-green)"></i> Short wait</span>
+      <span><i style="background:var(--pumpkin)"></i> Moderate wait</span>
+      <span><i style="background:var(--blood-bright)"></i> Long wait</span>
+      <span><i style="background:var(--muted)"></i> Closed / not open yet</span>
     </div>
-    <a class="back" href="index.html">&larr; Back to wait times</a>
+
+    <p class="muted">Wait times are sourced from the public <a href="https://themeparks.wiki/" target="_blank" rel="noopener" style="color:var(--pumpkin)">themeparks.wiki</a> API.
+    This is an independent fan project — not affiliated with or endorsed by Universal Parks &amp; Resorts.</p>
+
+    <div class="footer-note">
+      <div class="kofi-slot">
+        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+        <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+      </div>
+      <a class="back" href="index.html">&larr; Back to wait times</a>
+    </div>
   </div>
 </body>
 </html>
