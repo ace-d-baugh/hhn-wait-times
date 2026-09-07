@@ -155,6 +155,16 @@
   }
   .debug-close:hover{ color:var(--bone); }
 
+  .share-box{ text-align:center; }
+  .qr-image{
+    display:block; margin:12px auto 10px;
+    width:min(240px, 60vw); height:auto;
+    background:#fff; padding:10px; border-radius:8px;
+  }
+  .share-link{ margin:0; font-size:13px; word-break:break-all; }
+  .share-link a{ color:var(--pumpkin); text-decoration:none; }
+  .share-link a:hover{ text-decoration:underline; }
+
   .card.rank-1{ border-color:var(--blood-bright); box-shadow:0 0 0 1px var(--blood-bright), 0 0 30px var(--shadow); }
 
   .house-name{
@@ -243,6 +253,7 @@
     <span>Last updated: <b id="last-updated">—</b></span>
     <span>Next refresh: <b id="countdown">30</b>s</span>
     <span><button id="refresh-btn" style="background:none;border:1px solid var(--card-border);color:var(--bone);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">Refresh Now</button></span>
+    <span><button id="share-btn" style="background:none;border:1px solid var(--card-border);color:var(--bone);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">Share / QR Code</button></span>
   </div>
 
   <div id="error-banner"></div>
@@ -267,6 +278,15 @@
     <h3 id="debug-title"></h3>
     <p class="debug-hint">Raw live-feed data for this house (for troubleshooting missing wait times)</p>
     <pre id="debug-content"></pre>
+  </div>
+</div>
+
+<div class="debug-overlay" id="share-overlay" hidden>
+  <div class="debug-box share-box">
+    <button class="debug-close" id="share-close" aria-label="Close">&times;</button>
+    <h3>Scan for live wait times</h3>
+    <img class="qr-image" src="qr-code.png" alt="QR code linking to this page">
+    <p class="share-link"><a id="share-link" href="#" target="_blank" rel="noopener"></a></p>
   </div>
 </div>
 
@@ -437,8 +457,25 @@ document.getElementById('debug-close').addEventListener('click', () => {
 document.getElementById('debug-overlay').addEventListener('click', (e) => {
   if (e.target.id === 'debug-overlay') e.currentTarget.hidden = true;
 });
+
+function showShare() {
+  const link = document.getElementById('share-link');
+  link.textContent = location.href;
+  link.href = location.href;
+  document.getElementById('share-overlay').hidden = false;
+}
+document.getElementById('share-btn').addEventListener('click', showShare);
+document.getElementById('share-close').addEventListener('click', () => {
+  document.getElementById('share-overlay').hidden = true;
+});
+document.getElementById('share-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'share-overlay') e.currentTarget.hidden = true;
+});
+
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') document.getElementById('debug-overlay').hidden = true;
+  if (e.key !== 'Escape') return;
+  document.getElementById('debug-overlay').hidden = true;
+  document.getElementById('share-overlay').hidden = true;
 });
 
 let countdownTimer = null;
