@@ -535,7 +535,7 @@ function loadState() {
   if (modeCode === 'custom') {
     state.mode = 'custom';
     state.customOrder = order;
-    state.order = order.slice();
+    state.order = partitionCompleted(order.slice());
   } else {
     const [mode, direction] = modeCode.split('-');
     if (mode === 'wait' || mode === 'alpha') state.mode = mode;
@@ -617,23 +617,34 @@ function getHouseInfo(house) {
 
 // ─── Sorting ────────────────────────────────────────────────────────────────
 
+// Completed houses always sink to the end of whatever order is in effect —
+// they keep their relative order within each group (done vs. not-done), so
+// "same sort as the rest" still applies among the completed ones themselves.
+function partitionCompleted(order) {
+  const notDone = order.filter(id => !state.houseState[id].completed);
+  const done = order.filter(id => state.houseState[id].completed);
+  return [...notDone, ...done];
+}
+
 function computeOrder(mode, direction) {
   const rows = HOUSES.map(getHouseInfo);
 
+  let ids;
   if (mode === 'alpha') {
     rows.sort((a, b) => a.house.name.localeCompare(b.house.name));
     if (direction === 'desc') rows.reverse();
-    return rows.map(r => r.house.codeId);
+    ids = rows.map(r => r.house.codeId);
+  } else {
+    // wait mode: houses with a numeric wait sort by that wait; everything else
+    // (open/closed/down/no-data) is pushed to the end, alphabetically.
+    const numeric = rows.filter(r => typeof r.info.wait === 'number');
+    const other = rows.filter(r => typeof r.info.wait !== 'number');
+    numeric.sort((a, b) => a.info.wait - b.info.wait);
+    if (direction === 'desc') numeric.reverse();
+    other.sort((a, b) => a.house.name.localeCompare(b.house.name));
+    ids = [...numeric, ...other].map(r => r.house.codeId);
   }
-
-  // wait mode: houses with a numeric wait sort by that wait; everything else
-  // (open/closed/down/no-data) is pushed to the end, alphabetically.
-  const numeric = rows.filter(r => typeof r.info.wait === 'number');
-  const other = rows.filter(r => typeof r.info.wait !== 'number');
-  numeric.sort((a, b) => a.info.wait - b.info.wait);
-  if (direction === 'desc') numeric.reverse();
-  other.sort((a, b) => a.house.name.localeCompare(b.house.name));
-  return [...numeric, ...other].map(r => r.house.codeId);
+  return partitionCompleted(ids);
 }
 
 // ─── Layout: cards are absolutely positioned over invisible/dashed slots ───
@@ -787,7 +798,7 @@ function applySortChange() {
       const rows = HOUSES.slice().sort((a, b) => a.name.localeCompare(b.name));
       state.customOrder = rows.map(h => h.codeId);
     }
-    newOrder = state.customOrder.slice();
+    newOrder = partitionCompleted(state.customOrder.slice());
   } else {
     newOrder = computeOrder(state.mode, state.direction);
   }
@@ -936,7 +947,11 @@ function attachDragHandlers(card, codeId) {
     if (pointerId == null || (e && e.pointerId !== pointerId)) return;
     if (armed) {
       state.mode = 'custom';
+      // Keep the user's raw manual arrangement as customOrder (so an
+      // unmarked house returns to where they actually put it), but the
+      // displayed order always sinks completed houses to the end.
       state.customOrder = state.order.slice();
+      state.order = partitionCompleted(state.customOrder);
       grid.classList.add('custom-mode');
       document.getElementById('dir-toggle').disabled = true;
       document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
@@ -962,9 +977,20 @@ function attachDragHandlers(card, codeId) {
 }
 
 function toggleCompleted(codeId) {
+  if (state.isAnimating) return;
   const hs = state.houseState[codeId];
   hs.completed = !hs.completed;
   renderContent();
+
+  // Completed houses always sink to the end, sorted the same way as
+  // everything else within their own (done / not-done) group.
+  const newOrder = (state.mode === 'custom')
+    ? partitionCompleted((state.customOrder || state.order).slice())
+    : computeOrder(state.mode, state.direction);
+
+  state.order = newOrder;
+  positionCards(newOrder, {});
+  saveState();
 }
 
 // ─── Sort dropdown + direction toggle ──────────────────────────────────────
