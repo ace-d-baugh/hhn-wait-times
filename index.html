@@ -189,7 +189,10 @@
     display:flex; flex-direction:column;
     box-shadow:0 4px 18px rgba(0,0,0,.5);
     cursor:pointer;
-    touch-action:none;
+    /* Allow a normal vertical swipe to scroll the page; only a long-press
+       (which arm() escalates to touch-action:none) hands the gesture to
+       the drag-to-reorder logic below. */
+    touch-action:pan-y;
     user-select:none;
     transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease;
   }
@@ -818,6 +821,7 @@ function attachDragHandlers(card, codeId) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
     card.classList.remove('pressing', 'dragging');
+    card.style.touchAction = '';
     if (pointerId != null) {
       try { card.releasePointerCapture(pointerId); } catch (e) {}
     }
@@ -832,6 +836,9 @@ function attachDragHandlers(card, codeId) {
     card.classList.remove('pressing');
     card.classList.add('dragging');
     card.style.transition = 'box-shadow .15s ease';
+    // Take over the gesture from the browser's native scroll handling now
+    // that it's a confirmed long-press-to-drag, not a swipe-to-scroll.
+    card.style.touchAction = 'none';
     if (!state.customOrder || state.mode !== 'custom') {
       state.customOrder = state.order.slice();
     }
@@ -849,12 +856,19 @@ function attachDragHandlers(card, codeId) {
 
   card.addEventListener('pointermove', (e) => {
     if (pointerId == null || e.pointerId !== pointerId) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
 
     if (!armed) {
-      if (Math.hypot(dx, dy) > THRESHOLD) arm();
-      else return;
+      // Only a long press arms dragging now. If the pointer moves before the
+      // timer fires, this is a scroll/swipe, not a drag attempt — cancel the
+      // pending long-press and let the browser's native pan-y scrolling
+      // handle it (we never touched touch-action, so it already can).
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.hypot(dx, dy) > THRESHOLD) {
+        clearTimeout(longPressTimer);
+        card.classList.remove('pressing');
+      }
+      return;
     }
 
     const gridRect = grid.getBoundingClientRect();
