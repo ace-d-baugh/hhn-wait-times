@@ -575,7 +575,7 @@ function classify(entity) {
   const status = entity.status;
   if (status === 'DOWN') return { level: 'down', label: 'Down', wait: null, text: null };
   if (status === 'REFURBISHMENT') return { level: 'closed', label: 'Refurbishment', wait: null, text: null };
-  if (status === 'CLOSED') return { level: 'closed', label: 'Not running', wait: null, text: null };
+  if (status === 'CLOSED') return { level: 'closed', label: 'Closed', wait: null, text: null };
   if (status === 'OPERATING') {
     const q = entity.queue || {};
 
