@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Halloween Horror Nights — Live Wait Times</title>
+<title>HHN Wait Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -279,6 +279,10 @@
   }
   footer a{ color:var(--pumpkin); }
 
+  .kofi-slot{ display:flex; justify-content:center; }
+  .kofi-slot.footer-kofi{ margin-top:8px; }
+  .kofi-slot.menu-kofi{ margin-top:6px; padding:0 10px; }
+
   .legend{
     flex:0 0 auto;
     display:flex; flex-wrap:wrap; gap:4px 14px; justify-content:center;
@@ -342,8 +346,8 @@
 <div class="wrap">
   <header>
     <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu"><span></span><span></span><span></span></button>
-    <h1>Halloween Horror Nights</h1>
-    <div class="subtitle">Live House Wait Times</div>
+    <h1>HHN Wait Tracker</h1>
+    <div class="subtitle">Live House Wait Times and Tracker</div>
   </header>
 
   <div class="status-bar">
@@ -381,6 +385,10 @@
 
   <footer>
     Unofficial fan dashboard · data via <a href="https://themeparks.wiki/" target="_blank" rel="noopener">themeparks.wiki</a> · not affiliated with Universal Parks &amp; Resorts · tap a house to mark it done
+    <div class="kofi-slot footer-kofi">
+      <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+      <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+    </div>
   </footer>
 </div>
 
@@ -388,7 +396,10 @@
   <nav class="menu-panel">
     <button class="modal-close" id="menu-close" aria-label="Close menu">&times;</button>
     <a href="about.html">About</a>
-    <a href="donate.html">Donate</a>
+    <div class="kofi-slot menu-kofi">
+      <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+      <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+    </div>
     <button type="button" class="menu-link" id="menu-share-btn">Share</button>
     <a href="projects.html">More Projects</a>
   </nav>
