@@ -189,8 +189,7 @@
     border-radius:12px;
     padding:1vh 1vw;
     overflow:hidden;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:0.6vh;
+    display:flex; flex-direction:column; align-items:center;
     text-align:center;
     box-shadow:0 4px 18px rgba(0,0,0,.5);
     cursor:pointer;
@@ -209,7 +208,7 @@
   .card.pressing{ box-shadow:0 0 0 2px var(--pumpkin), 0 8px 20px rgba(0,0,0,.6); }
   @media (max-width:820px){
     .card:hover{ transform:none; }
-    .card{ padding:0.6vh 1vw; gap:0.3vh; }
+    .card{ padding:0.6vh 1vw; }
   }
 
   .card.rank-1{ border-color:var(--blood-bright); box-shadow:0 0 0 1px var(--blood-bright), 0 0 30px var(--shadow); }
@@ -218,6 +217,13 @@
   .card.completed .house-name{ color:var(--muted); }
 
   .house-name{
+    flex:0 0 auto;
+    width:100%;
+    /* Always reserves 2 lines' worth of height (line-height 1.2 x 2 lines),
+       whether the name needs one line or two, and centers a shorter name
+       within that reserved space — so the wait time below always starts
+       from the same vertical position regardless of name length. */
+    min-height:2.4em;
     font-size:clamp(11px, 1.9vh, 17px);
     font-weight:600;
     letter-spacing:.3px;
@@ -226,11 +232,13 @@
     display:-webkit-box;
     -webkit-line-clamp:2;
     -webkit-box-orient:vertical;
+    -webkit-box-pack:center;
+    justify-content:center;
     overflow:hidden;
     text-align:center;
   }
 
-  .wait-row{ display:flex; align-items:baseline; justify-content:center; gap:6px; }
+  .wait-row{ flex:1 1 auto; width:100%; display:flex; align-items:center; justify-content:center; gap:6px; }
   .wait-num{
     font-family:'Oswald', sans-serif;
     font-weight:700;
