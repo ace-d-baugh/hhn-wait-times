@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halloween Horror Nights — Live Wait Times</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#050304;
+    --bg-1:#0d0608;
+    --blood:#b30f1f;
+    --blood-bright:#ff2a3a;
+    --pumpkin:#ff7518;
+    --sick-green:#7ef542;
+    --bone:#e8dcc8;
+    --muted:#7a6d68;
+    --card-bg:#140a0c;
+    --card-border:#3a1015;
+    --shadow:rgba(179,15,31,.35);
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    min-height:100%; margin:0; padding:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(179,15,31,.25), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(179,15,31,.12), transparent 60%),
+      var(--bg-0);
+    color:var(--bone);
+    font-family:'Oswald', 'Segoe UI', sans-serif;
+    overflow-x:hidden;
+    overflow-y:auto;
+  }
+  /* drifting fog layer */
+  body::before{
+    content:"";
+    position:fixed; inset:-10%;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,.03), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,.025), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(255,255,255,.02), transparent 50%);
+    animation: drift 40s ease-in-out infinite alternate;
+    pointer-events:none;
+    z-index:0;
+  }
+  @keyframes drift{
+    0%{ transform: translate(-2%, -1%) scale(1); }
+    100%{ transform: translate(2%, 2%) scale(1.05); }
+  }
+
+  .wrap{
+    position:relative; z-index:1;
+    min-height:100vh; max-width:1400px; margin:0 auto;
+    padding:1vh 2vw;
+    display:flex; flex-direction:column;
+    gap:0.6vh;
+  }
+
+  header{ text-align:center; flex:0 0 auto; }
+  h1{
+    font-family:'Nosifer', 'Creepster', cursive;
+    font-size:clamp(10px, 1.4vh, 16px);
+    letter-spacing:1.5px;
+    margin:0;
+    color:var(--blood-bright);
+    text-shadow:
+      0 0 6px rgba(255,42,58,.7),
+      0 0 16px rgba(255,42,58,.35),
+      1px 1px 0 #000;
+    line-height:1.15;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:clamp(7px, 0.7vh, 9px);
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+
+  .status-bar{
+    flex:0 0 auto;
+    display:flex; flex-wrap:wrap; gap:6px 16px;
+    align-items:center; justify-content:center;
+    font-size:clamp(10px, 1.5vh, 13px);
+    color:var(--muted);
+    padding:0.8vh 14px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:8px;
+  }
+  .status-bar b{ color:var(--bone); font-weight:600; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  .dot.live{ background:var(--sick-green); box-shadow:0 0 8px var(--sick-green); animation:pulse 1.6s infinite; }
+  .dot.err{ background:var(--blood-bright); box-shadow:0 0 8px var(--blood-bright); }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  #error-banner{
+    display:none;
+    flex:0 0 auto;
+    background:rgba(179,15,31,.15);
+    border:1px solid var(--blood);
+    color:#ffb3ba;
+    padding:0.8vh 16px;
+    border-radius:8px;
+    font-size:clamp(10px, 1.4vh, 13px);
+    text-align:center;
+  }
+
+  .grid{
+    flex:1 1 auto;
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    grid-template-rows:repeat(2, minmax(150px, 1fr));
+    gap:1.4vh 1vw;
+  }
+  @media (max-width:820px){
+    .grid{ grid-template-columns:repeat(2, 1fr); grid-template-rows:repeat(5, minmax(120px, 1fr)); }
+  }
+
+  .card{
+    position:relative;
+    background:linear-gradient(160deg, var(--card-bg), #0a0506);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:1.4vh 1vw;
+    min-height:0; min-width:0;
+    overflow:hidden;
+    display:flex; flex-direction:column; justify-content:space-between;
+    box-shadow:0 4px 18px rgba(0,0,0,.5);
+    transition:transform .15s ease, box-shadow .15s ease;
+    cursor:pointer;
+  }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 8px 26px rgba(0,0,0,.6), 0 0 0 1px var(--blood); }
+
+  .debug-overlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(0,0,0,.8);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .debug-overlay[hidden]{ display:none; }
+  .debug-box{
+    position:relative;
+    background:#0d0608; border:1px solid var(--card-border); border-radius:10px;
+    padding:18px 20px; max-width:min(700px, 90vw); max-height:80vh; overflow:auto;
+  }
+  .debug-box h3{ margin:0 0 4px; color:var(--bone); font-size:15px; }
+  .debug-box .debug-hint{ margin:0 0 10px; color:var(--muted); font-size:11px; }
+  .debug-box pre{ margin:0; color:var(--sick-green); font-size:12px; line-height:1.5; white-space:pre-wrap; word-break:break-word; font-family:'Courier New', monospace; }
+  .debug-close{
+    position:absolute; top:8px; right:10px;
+    background:none; border:none; color:var(--muted); font-size:22px; line-height:1;
+    cursor:pointer; padding:2px 6px;
+  }
+  .debug-close:hover{ color:var(--bone); }
+
+  .card.rank-1{ border-color:var(--blood-bright); box-shadow:0 0 0 1px var(--blood-bright), 0 0 30px var(--shadow); }
+
+  .house-name{
+    font-size:clamp(11px, 1.9vh, 17px);
+    font-weight:600;
+    letter-spacing:.3px;
+    color:var(--bone);
+    line-height:1.2;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+
+  .wait-row{ display:flex; align-items:baseline; gap:6px; }
+  .wait-num{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:clamp(20px, 5.2vh, 46px);
+    line-height:1;
+  }
+  .wait-unit{ font-size:clamp(9px, 1.2vh, 13px); color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+  .badge{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:999px;
+    font-size:clamp(8px, 1.1vh, 11px);
+    font-weight:600;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    width:fit-content;
+  }
+
+  .lvl-low .wait-num{ color:var(--sick-green); }
+  .lvl-low .badge{ background:rgba(126,245,66,.12); color:var(--sick-green); border:1px solid rgba(126,245,66,.35); }
+
+  .lvl-med .wait-num{ color:var(--pumpkin); }
+  .lvl-med .badge{ background:rgba(255,117,24,.12); color:var(--pumpkin); border:1px solid rgba(255,117,24,.35); }
+
+  .lvl-high .wait-num{ color:var(--blood-bright); }
+  .lvl-high .badge{ background:rgba(255,42,58,.14); color:var(--blood-bright); border:1px solid rgba(255,42,58,.4); }
+
+  .lvl-open .wait-num{ color:var(--bone); font-size:clamp(14px, 3vh, 26px); }
+  .lvl-open .badge{ background:rgba(232,220,200,.1); color:var(--bone); border:1px solid rgba(232,220,200,.25); }
+
+  .lvl-closed{ opacity:.5; }
+  .lvl-closed .wait-num{ color:var(--muted); font-size:clamp(13px, 2.8vh, 24px); }
+  .lvl-closed .badge{ background:rgba(122,109,104,.15); color:var(--muted); border:1px solid rgba(122,109,104,.3); }
+
+  .lvl-down .wait-num{ color:var(--blood-bright); font-size:clamp(13px, 2.8vh, 24px); }
+  .lvl-down .badge{ background:rgba(255,42,58,.2); color:#fff; border:1px solid var(--blood-bright); animation:flash 1s infinite; }
+  @keyframes flash{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
+
+  .lvl-missing{ opacity:.4; }
+  .lvl-missing .wait-num{ font-size:clamp(11px, 2vh, 18px); color:var(--muted); }
+
+  footer{
+    flex:0 0 auto;
+    text-align:center;
+    color:var(--muted);
+    font-size:clamp(8px, 1.2vh, 11px);
+    line-height:1.4;
+  }
+  footer a{ color:var(--pumpkin); }
+
+  .legend{
+    flex:0 0 auto;
+    display:flex; flex-wrap:wrap; gap:4px 14px; justify-content:center;
+    font-size:clamp(8px, 1.2vh, 11px);
+    color:var(--muted);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; flex:0 0 auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Halloween Horror Nights</h1>
+    <div class="subtitle">Live House Wait Times</div>
+  </header>
+
+  <div class="status-bar">
+    <span><span class="dot live" id="status-dot"></span><b id="status-text">Connecting…</b></span>
+    <span>Last updated: <b id="last-updated">—</b></span>
+    <span>Next refresh: <b id="countdown">30</b>s</span>
+    <span><button id="refresh-btn" style="background:none;border:1px solid var(--card-border);color:var(--bone);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">Refresh Now</button></span>
+  </div>
+
+  <div id="error-banner"></div>
+
+  <div class="legend">
+    <span><i style="background:var(--sick-green)"></i> Short wait</span>
+    <span><i style="background:var(--pumpkin)"></i> Moderate wait</span>
+    <span><i style="background:var(--blood-bright)"></i> Long wait</span>
+    <span><i style="background:var(--muted)"></i> Closed / not open yet</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    Unofficial fan dashboard · data via <a href="https://themeparks.wiki/" target="_blank" rel="noopener">themeparks.wiki</a> · not affiliated with Universal Parks &amp; Resorts · click a house for raw data
+  </footer>
+</div>
+
+<div class="debug-overlay" id="debug-overlay" hidden>
+  <div class="debug-box">
+    <button class="debug-close" id="debug-close" aria-label="Close">&times;</button>
+    <h3 id="debug-title"></h3>
+    <p class="debug-hint">Raw live-feed data for this house (for troubleshooting missing wait times)</p>
+    <pre id="debug-content"></pre>
+  </div>
+</div>
+
+<script>
+const LIVE_URL = 'https://api.themeparks.wiki/v1/entity/89db5d43-c434-4097-b71f-f6869f495a22/live';
+const POLL_SECONDS = 30;
+
+// This year's HHN house lineup. Matched by name against the live feed so no
+// hardcoded entity ids are needed — if Universal adds/renames a house, just
+// add/edit an entry here.
+const HOUSES = [
+  { name: 'Sinners', keywords: ['sinners'] },
+  { name: 'Hellraiser', keywords: ['hellraiser'] },
+  { name: 'Stranger Things 5', keywords: ['stranger things'] },
+  { name: 'Jack and Oddfellow: Chaos and Control', keywords: ['jack and oddfellow', 'oddfellow'] },
+  { name: 'Madlands: Caged Cannibals', keywords: ['madlands', 'caged cannibals'] },
+  { name: 'H.R. Bloodengutz: A Halloween Fright-Tacular', keywords: ['bloodengutz', 'fright-tacular', 'fright tacular'] },
+  { name: 'Cybergoria', keywords: ['cybergoria'] },
+  { name: 'INVASION: Alien Abduction', keywords: ['invasion', 'alien abduction'] },
+  { name: 'Evil Dead Burn', keywords: ['evil dead'] },
+  { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'] }
+];
+
+function normalize(str) {
+  return (str || '')
+    .toLowerCase()
+    .replace(/[™®©'']/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function findEntity(entities, house) {
+  return entities.find(e => {
+    const n = normalize(e.name);
+    return house.keywords.some(kw => n.includes(normalize(kw)));
+  });
+}
+
+function classify(entity) {
+  if (!entity) return { level: 'missing', label: 'No data', wait: null, text: null };
+  const status = entity.status;
+  if (status === 'DOWN') return { level: 'down', label: 'Down', wait: null, text: null };
+  if (status === 'REFURBISHMENT') return { level: 'closed', label: 'Refurbishment', wait: null, text: null };
+  if (status === 'CLOSED') return { level: 'closed', label: 'Not running', wait: null, text: null };
+  if (status === 'OPERATING') {
+    const q = entity.queue || {};
+
+    // Standard standby line — the common case.
+    if (q.STANDBY && typeof q.STANDBY.waitTime === 'number') {
+      const wait = q.STANDBY.waitTime;
+      let level = 'low';
+      if (wait >= 60) level = 'high';
+      else if (wait >= 30) level = 'med';
+      return { level, label: 'Operating', wait, text: null };
+    }
+
+    // Some experiences only publish a paid/express line time.
+    if (q.PAID_STANDBY && typeof q.PAID_STANDBY.waitTime === 'number') {
+      return { level: 'open', label: 'Express wait', wait: q.PAID_STANDBY.waitTime, text: null };
+    }
+
+    // Timed-entry / virtual-line houses hand out a return window instead of a wait.
+    if (q.RETURN_TIME && q.RETURN_TIME.returnStart) {
+      const start = new Date(q.RETURN_TIME.returnStart);
+      const label = isNaN(start) ? 'Return time' : start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      return { level: 'open', label: 'Return time', wait: null, text: label };
+    }
+
+    // Boarding-group-style virtual queues (rare for houses, but seen on some experiences).
+    if (q.BOARDING_GROUP) {
+      const bg = q.BOARDING_GROUP;
+      const text = (bg.currentGroupStart != null)
+        ? ('Group ' + bg.currentGroupStart + (bg.currentGroupEnd != null ? '–' + bg.currentGroupEnd : ''))
+        : null;
+      return { level: 'open', label: 'Boarding group', wait: null, text };
+    }
+
+    // Operating with no queue data published at all (common for walk-through experiences).
+    return { level: 'open', label: 'Open', wait: null, text: null };
+  }
+  return { level: 'missing', label: status || 'Unknown', wait: null, text: null };
+}
+
+function render(entities, isFallbackNoData) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const rows = HOUSES.map(house => {
+    const entity = entities ? findEntity(entities, house) : null;
+    const info = classify(entity);
+    return { house, info, entity };
+  });
+
+  rows.sort((a, b) => {
+    const rank = { high: 0, med: 1, low: 2, open: 3, down: 4, closed: 5, missing: 6 };
+    const ra = rank[a.info.level], rb = rank[b.info.level];
+    if (ra !== rb) return ra - rb;
+    return (b.info.wait || 0) - (a.info.wait || 0);
+  });
+
+  rows.forEach((row, i) => {
+    const card = document.createElement('div');
+    card.className = 'card lvl-' + row.info.level + (i === 0 && row.info.level === 'high' ? ' rank-1' : '');
+
+    const name = document.createElement('div');
+    name.className = 'house-name';
+    name.textContent = row.house.name;
+    card.appendChild(name);
+
+    const waitRow = document.createElement('div');
+    waitRow.className = 'wait-row';
+    const num = document.createElement('span');
+    num.className = 'wait-num';
+    if (typeof row.info.wait === 'number') {
+      num.textContent = row.info.wait;
+      const unit = document.createElement('span');
+      unit.className = 'wait-unit';
+      unit.textContent = 'min';
+      waitRow.appendChild(num);
+      waitRow.appendChild(unit);
+    } else if (row.info.text) {
+      num.textContent = row.info.text;
+      waitRow.appendChild(num);
+    } else {
+      num.textContent = row.info.label;
+      waitRow.appendChild(num);
+    }
+    card.appendChild(waitRow);
+
+    const badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.textContent = row.info.level === 'missing' ? 'No data' : row.info.label;
+    card.appendChild(badge);
+
+    card.addEventListener('click', () => showDebug(row.house, row.entity));
+
+    grid.appendChild(card);
+  });
+}
+
+function showDebug(house, entity) {
+  document.getElementById('debug-title').textContent = house.name;
+  const content = entity
+    ? JSON.stringify(entity, null, 2)
+    : 'No entity in the live feed matched any of these keywords:\n  ' + house.keywords.join(', ') +
+      '\n\nThis usually means the house has not been published as a live entity yet, ' +
+      'or its name in the feed does not contain any of these keywords.';
+  document.getElementById('debug-content').textContent = content;
+  document.getElementById('debug-overlay').hidden = false;
+}
+
+document.getElementById('debug-close').addEventListener('click', () => {
+  document.getElementById('debug-overlay').hidden = true;
+});
+document.getElementById('debug-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'debug-overlay') e.currentTarget.hidden = true;
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.getElementById('debug-overlay').hidden = true;
+});
+
+let countdownTimer = null;
+function startCountdown() {
+  let n = POLL_SECONDS;
+  document.getElementById('countdown').textContent = n;
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    n -= 1;
+    if (n <= 0) { n = POLL_SECONDS; }
+    document.getElementById('countdown').textContent = n;
+  }, 1000);
+}
+
+async function poll() {
+  const dot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const errorBanner = document.getElementById('error-banner');
+
+  try {
+    const res = await fetch(LIVE_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const entities = data.liveData || [];
+
+    render(entities);
+
+    dot.className = 'dot live';
+    statusText.textContent = 'Live';
+    errorBanner.style.display = 'none';
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+  } catch (err) {
+    dot.className = 'dot err';
+    statusText.textContent = 'Connection error';
+    errorBanner.style.display = 'block';
+    errorBanner.textContent =
+      'Could not reach the live wait time feed (' + err.message + '). ' +
+      'This can happen if your browser blocks the request, the API is briefly down, or you have no internet connection. Retrying automatically…';
+    render(null);
+  }
+
+  startCountdown();
+}
+
+document.getElementById('refresh-btn').addEventListener('click', poll);
+
+poll();
+setInterval(poll, POLL_SECONDS * 1000);
+</script>
+</body>
+</html>
