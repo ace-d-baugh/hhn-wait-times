@@ -280,7 +280,7 @@ const POLL_SECONDS = 30;
 const HOUSES = [
   { name: 'Sinners', keywords: ['sinners'] },
   { name: 'Hellraiser', keywords: ['hellraiser'] },
-  { name: 'Stranger Things 5', keywords: ['stranger things'] },
+  { name: 'Stranger Things 5', keywords: ['stranger things'], exclude: ['show', 'experience', 'store', 'tribute'] },
   { name: 'Jack and Oddfellow: Chaos and Control', keywords: ['jack and oddfellow', 'oddfellow'] },
   { name: 'Madlands: Caged Cannibals', keywords: ['madlands', 'caged cannibals'] },
   { name: 'H.R. Bloodengutz: A Halloween Fright-Tacular', keywords: ['bloodengutz', 'fright-tacular', 'fright tacular'] },
@@ -300,10 +300,22 @@ function normalize(str) {
 }
 
 function findEntity(entities, house) {
-  return entities.find(e => {
+  const exclude = house.exclude || [];
+
+  const candidates = entities.filter(e => {
     const n = normalize(e.name);
-    return house.keywords.some(kw => n.includes(normalize(kw)));
+    if (!house.keywords.some(kw => n.includes(normalize(kw)))) return false;
+    if (exclude.some(kw => n.includes(normalize(kw)))) return false;
+    return true;
   });
+
+  if (candidates.length <= 1) return candidates[0] || null;
+
+  // Multiple name matches (e.g. a house plus an unrelated show/experience that
+  // happens to share words with it) — prefer the one that's actually an
+  // attraction-type entity, since houses are queued attractions, not shows.
+  const attraction = candidates.find(e => e.entityType === 'ATTRACTION');
+  return attraction || candidates[0];
 }
 
 function classify(entity) {
