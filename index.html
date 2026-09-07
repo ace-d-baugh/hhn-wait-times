@@ -815,7 +815,7 @@ function attachDragHandlers(card, codeId) {
   let armed = false;
   let longPressTimer = null;
   const THRESHOLD = 8;
-  const LONG_PRESS_MS = 400;
+  const LONG_PRESS_MS = 250;
 
   function cleanup() {
     clearTimeout(longPressTimer);
@@ -853,6 +853,15 @@ function attachDragHandlers(card, codeId) {
     card.classList.add('pressing');
     longPressTimer = setTimeout(arm, LONG_PRESS_MS);
   });
+
+  // touch-action alone isn't reliable once a touch is already moving — some
+  // browsers lock in "this is a scroll" as soon as the finger drifts, even if
+  // touch-action later changes to none. A non-passive touchmove listener that
+  // preventDefaults once armed is what actually stops the page from scrolling
+  // mid-drag, in any direction, on real touch devices.
+  card.addEventListener('touchmove', (e) => {
+    if (armed) e.preventDefault();
+  }, { passive: false });
 
   card.addEventListener('pointermove', (e) => {
     if (pointerId == null || e.pointerId !== pointerId) return;
