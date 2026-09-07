@@ -58,7 +58,7 @@
     gap:0.6vh;
   }
 
-  header{ text-align:center; flex:0 0 auto; }
+  header{ position:relative; text-align:center; flex:0 0 auto; padding:0 44px; }
   h1{
     font-family:'Nosifer', 'Creepster', cursive;
     font-size:clamp(10px, 1.4vh, 16px);
@@ -80,10 +80,17 @@
   @media (max-width:820px){
     h1{ font-size:clamp(22px, 6vw, 34px); letter-spacing:1px; }
     .subtitle{ font-size:clamp(10px, 2.6vw, 13px); letter-spacing:1.5px; }
-    .status-bar{ padding:0.5vh 10px; gap:4px 10px; }
-    .legend{ gap:2px 10px; }
-    .card{ padding:1.2vh 1vw 0.9vh; }
   }
+
+  .hamburger-btn{
+    position:absolute; left:0; top:50%; transform:translateY(-50%);
+    width:34px; height:34px;
+    background:rgba(255,255,255,.03); border:1px solid var(--card-border); border-radius:8px;
+    cursor:pointer; padding:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  }
+  .hamburger-btn span{ display:block; width:18px; height:2px; background:var(--bone); border-radius:1px; }
+  .hamburger-btn:hover{ border-color:var(--blood); }
 
   .status-bar{
     flex:0 0 auto;
@@ -102,6 +109,43 @@
   .dot.err{ background:var(--blood-bright); box-shadow:0 0 8px var(--blood-bright); }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
 
+  .btn{
+    background:none; border:1px solid var(--card-border); color:var(--bone);
+    padding:4px 10px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
+  }
+  .btn:hover{ border-color:var(--blood); }
+
+  .sort-control{ display:flex; align-items:center; gap:6px; }
+  .sort-control .sort-label{ color:var(--muted); }
+
+  .dropdown{ position:relative; }
+  .dropdown-btn{
+    display:flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.02); border:1px solid var(--card-border); color:var(--bone);
+    padding:4px 10px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
+    min-width:110px; justify-content:space-between;
+  }
+  .dropdown-btn:hover{ border-color:var(--blood); }
+  .dropdown-btn .caret{ color:var(--muted); font-size:10px; }
+  .dropdown-list{
+    position:absolute; top:calc(100% + 4px); left:0; z-index:40;
+    list-style:none; margin:0; padding:4px;
+    background:#0d0608; border:1px solid var(--card-border); border-radius:8px;
+    min-width:140px;
+    box-shadow:0 8px 24px rgba(0,0,0,.6);
+  }
+  .dropdown-list[hidden]{ display:none; }
+  .dropdown-list li{
+    padding:6px 10px; border-radius:5px; cursor:pointer; color:var(--bone); font-size:13px;
+    white-space:nowrap;
+  }
+  .dropdown-list li:hover{ background:rgba(255,42,58,.12); }
+  .dropdown-list li.selected{ color:var(--pumpkin); font-weight:600; }
+
+  .dir-toggle{ min-width:56px; }
+  .dir-toggle[disabled]{ opacity:.35; cursor:not-allowed; }
+  .dir-toggle[disabled]:hover{ border-color:var(--card-border); }
+
   #error-banner{
     display:none;
     flex:0 0 auto;
@@ -115,6 +159,7 @@
   }
 
   .grid{
+    position:relative;
     flex:1 1 auto;
     display:grid;
     grid-template-columns:repeat(5, 1fr);
@@ -126,54 +171,42 @@
     .grid{ grid-template-columns:repeat(2, 1fr); grid-template-rows:repeat(5, minmax(85px, 128px)); gap:1vh 2.5vw; }
   }
 
+  .slot{
+    border-radius:12px;
+    border:2px dashed transparent;
+    transition:border-color .2s ease;
+  }
+  .grid.custom-mode .slot{ border-color:rgba(232,220,200,.25); }
+
   .card{
-    position:relative;
+    position:absolute;
+    top:0; left:0;
     background:linear-gradient(160deg, var(--card-bg), #0a0506);
     border:1px solid var(--card-border);
     border-radius:12px;
     padding:1.6vh 1vw 1.2vh;
-    min-height:0; min-width:0;
     overflow:hidden;
     display:flex; flex-direction:column;
     box-shadow:0 4px 18px rgba(0,0,0,.5);
-    transition:transform .15s ease, box-shadow .15s ease;
     cursor:pointer;
+    touch-action:none;
+    user-select:none;
+    transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease;
   }
-  .card:hover{ transform:translateY(-2px); box-shadow:0 8px 26px rgba(0,0,0,.6), 0 0 0 1px var(--blood); }
-
-  .debug-overlay{
-    position:fixed; inset:0; z-index:50;
-    background:rgba(0,0,0,.8);
-    display:flex; align-items:center; justify-content:center;
-    padding:20px;
+  .card.dragging{
+    transition:box-shadow .15s ease;
+    box-shadow:0 16px 40px rgba(0,0,0,.7), 0 0 0 2px var(--blood-bright);
+    z-index:30;
   }
-  .debug-overlay[hidden]{ display:none; }
-  .debug-box{
-    position:relative;
-    background:#0d0608; border:1px solid var(--card-border); border-radius:10px;
-    padding:18px 20px; max-width:min(700px, 90vw); max-height:80vh; overflow:auto;
+  .card.pressing{ box-shadow:0 0 0 2px var(--pumpkin), 0 8px 20px rgba(0,0,0,.6); }
+  @media (max-width:820px){
+    .card:hover{ transform:none; }
   }
-  .debug-box h3{ margin:0 0 4px; color:var(--bone); font-size:15px; }
-  .debug-box .debug-hint{ margin:0 0 10px; color:var(--muted); font-size:11px; }
-  .debug-box pre{ margin:0; color:var(--sick-green); font-size:12px; line-height:1.5; white-space:pre-wrap; word-break:break-word; font-family:'Courier New', monospace; }
-  .debug-close{
-    position:absolute; top:8px; right:10px;
-    background:none; border:none; color:var(--muted); font-size:22px; line-height:1;
-    cursor:pointer; padding:2px 6px;
-  }
-  .debug-close:hover{ color:var(--bone); }
-
-  .share-box{ text-align:center; }
-  .qr-image{
-    display:block; margin:12px auto 10px;
-    width:min(240px, 60vw); height:auto;
-    background:#fff; padding:10px; border-radius:8px;
-  }
-  .share-link{ margin:0; font-size:13px; word-break:break-all; }
-  .share-link a{ color:var(--pumpkin); text-decoration:none; }
-  .share-link a:hover{ text-decoration:underline; }
 
   .card.rank-1{ border-color:var(--blood-bright); box-shadow:0 0 0 1px var(--blood-bright), 0 0 30px var(--shadow); }
+
+  .card.completed{ opacity:.55; }
+  .card.completed .house-name{ color:var(--muted); }
 
   .house-name{
     font-size:clamp(11px, 1.9vh, 17px);
@@ -195,6 +228,10 @@
     line-height:1;
   }
   .wait-unit{ font-size:clamp(9px, 1.2vh, 13px); color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+  .trend-arrow{ font-size:clamp(12px, 2vh, 18px); line-height:1; }
+  .trend-arrow.up{ color:var(--blood-bright); }
+  .trend-arrow.down{ color:var(--sick-green); }
+  .check-mark{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(20px, 5.2vh, 46px); line-height:1; color:var(--sick-green); }
 
   .badge{
     display:inline-block;
@@ -247,11 +284,61 @@
   }
   .legend span{ display:inline-flex; align-items:center; gap:5px; }
   .legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; flex:0 0 auto; }
+
+  /* Shared overlay/modal styling (hamburger menu + share modal) */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(0,0,0,.8);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal-box{
+    position:relative;
+    background:#0d0608; border:1px solid var(--card-border); border-radius:10px;
+    padding:18px 20px; max-width:min(360px, 90vw); max-height:80vh; overflow:auto;
+  }
+  .modal-box h3{ margin:0 0 4px; color:var(--bone); font-size:15px; }
+  .modal-close{
+    position:absolute; top:8px; right:10px;
+    background:none; border:none; color:var(--muted); font-size:22px; line-height:1;
+    cursor:pointer; padding:2px 6px;
+  }
+  .modal-close:hover{ color:var(--bone); }
+
+  .share-box{ text-align:center; }
+  .qr-image{
+    display:block; margin:12px auto 10px;
+    width:min(240px, 60vw); height:auto;
+    background:#fff; padding:10px; border-radius:8px;
+  }
+  .share-link{ margin:0; font-size:13px; word-break:break-all; }
+  .share-link a{ color:var(--pumpkin); text-decoration:none; }
+  .share-link a:hover{ text-decoration:underline; }
+
+  .menu-overlay{ align-items:stretch; justify-content:flex-start; padding:0; background:rgba(0,0,0,.7); }
+  .menu-panel{
+    position:relative;
+    width:min(280px, 80vw); height:100%;
+    background:#0d0608; border-right:1px solid var(--card-border);
+    padding:60px 20px 20px;
+    display:flex; flex-direction:column; gap:6px;
+    animation:slideIn .2s ease;
+  }
+  @keyframes slideIn{ from{ transform:translateX(-100%); } to{ transform:translateX(0); } }
+  .menu-panel a, .menu-panel button.menu-link{
+    display:block; text-align:left;
+    background:none; border:none; color:var(--bone);
+    font-family:inherit; font-size:16px; letter-spacing:.3px;
+    padding:12px 10px; border-radius:8px; cursor:pointer; text-decoration:none;
+  }
+  .menu-panel a:hover, .menu-panel button.menu-link:hover{ background:rgba(255,42,58,.12); color:var(--blood-bright); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu"><span></span><span></span><span></span></button>
     <h1>Halloween Horror Nights</h1>
     <div class="subtitle">Live House Wait Times</div>
   </header>
@@ -260,8 +347,22 @@
     <span><span class="dot live" id="status-dot"></span><b id="status-text">Connecting…</b></span>
     <span>Last updated: <b id="last-updated">—</b></span>
     <span>Next refresh: <b id="countdown">30</b>s</span>
-    <span><button id="refresh-btn" style="background:none;border:1px solid var(--card-border);color:var(--bone);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">Refresh Now</button></span>
-    <span><button id="share-btn" style="background:none;border:1px solid var(--card-border);color:var(--bone);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">Share / QR Code</button></span>
+    <span><button id="refresh-btn" class="btn">Refresh Now</button></span>
+    <span class="sort-control">
+      <span class="sort-label">Sort</span>
+      <div class="dropdown" id="sort-dropdown">
+        <button class="dropdown-btn" id="sort-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span id="sort-dropdown-label">Wait Time</span>
+          <span class="caret">&#9662;</span>
+        </button>
+        <ul class="dropdown-list" id="sort-dropdown-list" role="listbox" hidden>
+          <li data-mode="wait" role="option" class="selected">Wait Time</li>
+          <li data-mode="alpha" role="option">Alphabetical</li>
+          <li data-mode="custom" role="option">Custom</li>
+        </ul>
+      </div>
+      <button class="btn dir-toggle" id="dir-toggle" title="Toggle sort direction">Z&rarr;A</button>
+    </span>
   </div>
 
   <div id="error-banner"></div>
@@ -276,22 +377,23 @@
   <div class="grid" id="grid"></div>
 
   <footer>
-    Unofficial fan dashboard · data via <a href="https://themeparks.wiki/" target="_blank" rel="noopener">themeparks.wiki</a> · not affiliated with Universal Parks &amp; Resorts · click a house for raw data
+    Unofficial fan dashboard · data via <a href="https://themeparks.wiki/" target="_blank" rel="noopener">themeparks.wiki</a> · not affiliated with Universal Parks &amp; Resorts · tap a house to mark it done
   </footer>
 </div>
 
-<div class="debug-overlay" id="debug-overlay" hidden>
-  <div class="debug-box">
-    <button class="debug-close" id="debug-close" aria-label="Close">&times;</button>
-    <h3 id="debug-title"></h3>
-    <p class="debug-hint">Raw live-feed data for this house (for troubleshooting missing wait times)</p>
-    <pre id="debug-content"></pre>
-  </div>
+<div class="modal-overlay menu-overlay" id="menu-overlay" hidden>
+  <nav class="menu-panel">
+    <button class="modal-close" id="menu-close" aria-label="Close menu">&times;</button>
+    <a href="about.html">About</a>
+    <a href="donate.html">Donate</a>
+    <button type="button" class="menu-link" id="menu-share-btn">Share</button>
+    <a href="projects.html">More Projects</a>
+  </nav>
 </div>
 
-<div class="debug-overlay" id="share-overlay" hidden>
-  <div class="debug-box share-box">
-    <button class="debug-close" id="share-close" aria-label="Close">&times;</button>
+<div class="modal-overlay" id="share-overlay" hidden>
+  <div class="modal-box share-box">
+    <button class="modal-close" id="share-close" aria-label="Close">&times;</button>
     <h3>Scan for live wait times</h3>
     <img class="qr-image" src="qr-code.png" alt="QR code linking to this page">
     <p class="share-link"><a id="share-link" href="#" target="_blank" rel="noopener"></a></p>
@@ -301,10 +403,15 @@
 <script>
 const LIVE_URL = 'https://api.themeparks.wiki/v1/entity/89db5d43-c434-4097-b71f-f6869f495a22/live';
 const POLL_SECONDS = 30;
+const COOKIE_NAME = 'hhn_state';
+const COOKIE_DAYS = 365;
+const NO_WAIT_SENTINEL = 999;
 
 // This year's HHN house lineup. Matched by name against the live feed so no
 // hardcoded entity ids are needed — if Universal adds/renames a house, just
-// add/edit an entry here.
+// add/edit an entry here. `codeId` (0-9) is this house's stable slot in the
+// cookie's per-house status blob — keep the array order stable once shipped,
+// since reordering it would desync existing visitors' saved cookies.
 const HOUSES = [
   { name: 'Sinners', keywords: ['sinners'] },
   { name: 'Hellraiser', keywords: ['hellraiser'] },
@@ -316,7 +423,110 @@ const HOUSES = [
   { name: 'INVASION: Alien Abduction', keywords: ['invasion', 'alien abduction'] },
   { name: 'Evil Dead Burn', keywords: ['evil dead'] },
   { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'] }
-];
+].map((h, i) => ({ ...h, codeId: i }));
+
+// ─── Cookie helpers ─────────────────────────────────────────────────────────
+
+function setCookie(name, value, days) {
+  const maxAge = days * 24 * 60 * 60;
+  document.cookie = name + '=' + encodeURIComponent(value) + ';path=/;max-age=' + maxAge + ';SameSite=Lax';
+}
+
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ─── App state ──────────────────────────────────────────────────────────────
+// mode: 'wait' | 'alpha' | 'custom'
+// direction: 'asc' | 'desc' (ignored in custom mode)
+// customOrder: array of 10 codeIds, only meaningful once custom mode has a basis
+// houseState: { [codeId]: { completed: bool, lastWait: number|null } }
+
+const state = {
+  mode: 'wait',
+  direction: 'desc',
+  customOrder: null,
+  houseState: {},
+  order: HOUSES.map(h => h.codeId),
+  entities: null,
+  isAnimating: false
+};
+
+for (const h of HOUSES) {
+  state.houseState[h.codeId] = { completed: false, lastWait: null };
+}
+
+function encodeState() {
+  const positions = {};
+  if (state.mode === 'custom' && Array.isArray(state.customOrder)) {
+    state.customOrder.forEach((codeId, idx) => { positions[codeId] = idx; });
+  } else {
+    state.order.forEach((codeId, idx) => { positions[codeId] = idx; });
+  }
+
+  let blob = '';
+  for (let codeId = 0; codeId <= 9; codeId++) {
+    const hs = state.houseState[codeId] || { completed: false, lastWait: null };
+    const pos = positions[codeId] != null ? positions[codeId] : codeId;
+    const completed = hs.completed ? 1 : 0;
+    const wait = (typeof hs.lastWait === 'number') ? Math.min(999, Math.max(0, Math.round(hs.lastWait))) : NO_WAIT_SENTINEL;
+    blob += String(codeId) + String(pos) + String(completed) + String(wait).padStart(3, '0');
+  }
+
+  const modeCode = state.mode === 'custom' ? 'custom' : (state.mode + '-' + state.direction);
+  return modeCode + '::' + blob;
+}
+
+function saveState() {
+  setCookie(COOKIE_NAME, encodeState(), COOKIE_DAYS);
+}
+
+function loadState() {
+  const raw = getCookie(COOKIE_NAME);
+  if (!raw) return;
+
+  const parts = raw.split('::');
+  if (parts.length !== 2) return;
+  const [modeCode, blob] = parts;
+  if (blob.length !== 60) return;
+
+  const positions = {};
+  for (let i = 0; i < 10; i++) {
+    const chunk = blob.slice(i * 6, i * 6 + 6);
+    const codeId = parseInt(chunk[0], 10);
+    const position = parseInt(chunk[1], 10);
+    const completed = chunk[2] === '1';
+    const wait = parseInt(chunk.slice(3, 6), 10);
+    if (Number.isNaN(codeId) || !state.houseState[codeId]) continue;
+    state.houseState[codeId] = {
+      completed,
+      lastWait: (wait === NO_WAIT_SENTINEL) ? null : wait
+    };
+    positions[codeId] = position;
+  }
+
+  const order = new Array(10).fill(null);
+  Object.entries(positions).forEach(([codeId, pos]) => {
+    if (pos >= 0 && pos <= 9 && order[pos] === null) order[pos] = parseInt(codeId, 10);
+  });
+  const missing = HOUSES.map(h => h.codeId).filter(id => !order.includes(id));
+  for (let i = 0; i < order.length; i++) {
+    if (order[i] === null) order[i] = missing.shift();
+  }
+
+  if (modeCode === 'custom') {
+    state.mode = 'custom';
+    state.customOrder = order;
+    state.order = order.slice();
+  } else {
+    const [mode, direction] = modeCode.split('-');
+    if (mode === 'wait' || mode === 'alpha') state.mode = mode;
+    if (direction === 'asc' || direction === 'desc') state.direction = direction;
+  }
+}
+
+// ─── Live data matching (unchanged logic) ──────────────────────────────────
 
 function normalize(str) {
   return (str || '')
@@ -339,9 +549,6 @@ function findEntity(entities, house) {
 
   if (candidates.length <= 1) return candidates[0] || null;
 
-  // Multiple name matches (e.g. a house plus an unrelated show/experience that
-  // happens to share words with it) — prefer the one that's actually an
-  // attraction-type entity, since houses are queued attractions, not shows.
   const attraction = candidates.find(e => e.entityType === 'ATTRACTION');
   return attraction || candidates[0];
 }
@@ -355,7 +562,6 @@ function classify(entity) {
   if (status === 'OPERATING') {
     const q = entity.queue || {};
 
-    // Standard standby line — the common case.
     if (q.STANDBY && typeof q.STANDBY.waitTime === 'number') {
       const wait = q.STANDBY.waitTime;
       let level = 'low';
@@ -364,19 +570,16 @@ function classify(entity) {
       return { level, label: 'Operating', wait, text: null };
     }
 
-    // Some experiences only publish a paid/express line time.
     if (q.PAID_STANDBY && typeof q.PAID_STANDBY.waitTime === 'number') {
       return { level: 'open', label: 'Express wait', wait: q.PAID_STANDBY.waitTime, text: null };
     }
 
-    // Timed-entry / virtual-line houses hand out a return window instead of a wait.
     if (q.RETURN_TIME && q.RETURN_TIME.returnStart) {
       const start = new Date(q.RETURN_TIME.returnStart);
       const label = isNaN(start) ? 'Return time' : start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       return { level: 'open', label: 'Return time', wait: null, text: label };
     }
 
-    // Boarding-group-style virtual queues (rare for houses, but seen on some experiences).
     if (q.BOARDING_GROUP) {
       const bg = q.BOARDING_GROUP;
       const text = (bg.currentGroupStart != null)
@@ -385,85 +588,397 @@ function classify(entity) {
       return { level: 'open', label: 'Boarding group', wait: null, text };
     }
 
-    // Operating with no queue data published at all (common for walk-through experiences).
     return { level: 'open', label: 'Open', wait: null, text: null };
   }
   return { level: 'missing', label: status || 'Unknown', wait: null, text: null };
 }
 
-function render(entities, isFallbackNoData) {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
+function getHouseInfo(house) {
+  const entity = state.entities ? findEntity(state.entities, house) : null;
+  return { house, entity, info: classify(entity) };
+}
 
-  const rows = HOUSES.map(house => {
-    const entity = entities ? findEntity(entities, house) : null;
-    const info = classify(entity);
-    return { house, info, entity };
-  });
+// ─── Sorting ────────────────────────────────────────────────────────────────
 
-  rows.sort((a, b) => {
-    const rank = { high: 0, med: 1, low: 2, open: 3, down: 4, closed: 5, missing: 6 };
-    const ra = rank[a.info.level], rb = rank[b.info.level];
-    if (ra !== rb) return ra - rb;
-    return (b.info.wait || 0) - (a.info.wait || 0);
-  });
+function computeOrder(mode, direction) {
+  const rows = HOUSES.map(getHouseInfo);
 
-  rows.forEach((row, i) => {
+  if (mode === 'alpha') {
+    rows.sort((a, b) => a.house.name.localeCompare(b.house.name));
+    if (direction === 'desc') rows.reverse();
+    return rows.map(r => r.house.codeId);
+  }
+
+  // wait mode: houses with a numeric wait sort by that wait; everything else
+  // (open/closed/down/no-data) is pushed to the end, alphabetically.
+  const numeric = rows.filter(r => typeof r.info.wait === 'number');
+  const other = rows.filter(r => typeof r.info.wait !== 'number');
+  numeric.sort((a, b) => a.info.wait - b.info.wait);
+  if (direction === 'desc') numeric.reverse();
+  other.sort((a, b) => a.house.name.localeCompare(b.house.name));
+  return [...numeric, ...other].map(r => r.house.codeId);
+}
+
+// ─── Layout: cards are absolutely positioned over invisible/dashed slots ───
+
+const grid = document.getElementById('grid');
+const slotEls = [];
+const cardEls = {};
+
+function buildSlotsAndCards() {
+  for (let i = 0; i < 10; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    grid.appendChild(slot);
+    slotEls.push(slot);
+  }
+  for (const house of HOUSES) {
     const card = document.createElement('div');
-    card.className = 'card lvl-' + row.info.level + (i === 0 && row.info.level === 'high' ? ' rank-1' : '');
+    card.className = 'card';
+    card.dataset.codeId = house.codeId;
 
     const name = document.createElement('div');
     name.className = 'house-name';
-    name.textContent = row.house.name;
-    card.appendChild(name);
+    name.textContent = house.name;
 
     const waitRow = document.createElement('div');
     waitRow.className = 'wait-row';
-    const num = document.createElement('span');
-    num.className = 'wait-num';
-    if (typeof row.info.wait === 'number') {
-      num.textContent = row.info.wait;
-      const unit = document.createElement('span');
-      unit.className = 'wait-unit';
-      unit.textContent = 'min';
-      waitRow.appendChild(num);
-      waitRow.appendChild(unit);
-    } else if (row.info.text) {
-      num.textContent = row.info.text;
-      waitRow.appendChild(num);
-    } else {
-      num.textContent = row.info.label;
-      waitRow.appendChild(num);
-    }
-    card.appendChild(waitRow);
 
     const badge = document.createElement('div');
     badge.className = 'badge';
-    badge.textContent = row.info.level === 'missing' ? 'No data' : row.info.label;
+
+    card.appendChild(name);
+    card.appendChild(waitRow);
     card.appendChild(badge);
-
-    card.addEventListener('click', () => showDebug(row.house, row.entity));
-
     grid.appendChild(card);
+    cardEls[house.codeId] = card;
+
+    attachDragHandlers(card, house.codeId);
+  }
+}
+
+function getSlotRects() {
+  const gridRect = grid.getBoundingClientRect();
+  return slotEls.map(s => {
+    const r = s.getBoundingClientRect();
+    return { x: r.left - gridRect.left, y: r.top - gridRect.top, w: r.width, h: r.height };
   });
 }
 
-function showDebug(house, entity) {
-  document.getElementById('debug-title').textContent = house.name;
-  const content = entity
-    ? JSON.stringify(entity, null, 2)
-    : 'No entity in the live feed matched any of these keywords:\n  ' + house.keywords.join(', ') +
-      '\n\nThis usually means the house has not been published as a live entity yet, ' +
-      'or its name in the feed does not contain any of these keywords.';
-  document.getElementById('debug-content').textContent = content;
-  document.getElementById('debug-overlay').hidden = false;
+// Cards sit slightly inset from their slot's rect so the dashed slot border
+// (shown in custom mode) peeks out around each card instead of being hidden
+// exactly underneath it.
+const SLOT_INSET = 4;
+
+function positionCards(order, opts) {
+  opts = opts || {};
+  const rects = getSlotRects();
+  order.forEach((codeId, idx) => {
+    const card = cardEls[codeId];
+    if (!card) return;
+    const r = rects[idx];
+    const x = r.x + SLOT_INSET, y = r.y + SLOT_INSET;
+    const w = r.w - SLOT_INSET * 2, h = r.h - SLOT_INSET * 2;
+    card.style.width = w + 'px';
+    card.style.height = h + 'px';
+    if (opts.instant) {
+      const prevTransition = card.style.transition;
+      card.style.transition = 'none';
+      card.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(0deg) scale(1)';
+      // eslint-disable-next-line no-unused-expressions
+      card.offsetHeight;
+      card.style.transition = prevTransition;
+    } else {
+      card.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(0deg) scale(1)';
+    }
+  });
 }
 
-document.getElementById('debug-close').addEventListener('click', () => {
-  document.getElementById('debug-overlay').hidden = true;
+window.addEventListener('resize', () => {
+  if (state.isAnimating) return;
+  positionCards(state.order, { instant: true });
 });
-document.getElementById('debug-overlay').addEventListener('click', (e) => {
-  if (e.target.id === 'debug-overlay') e.currentTarget.hidden = true;
+
+// ─── Rendering card content ─────────────────────────────────────────────────
+
+function renderContent() {
+  for (const house of HOUSES) {
+    const card = cardEls[house.codeId];
+    const { info } = getHouseInfo(house);
+    const hs = state.houseState[house.codeId];
+
+    card.className = 'card lvl-' + info.level + (hs.completed ? ' completed' : '');
+
+    const waitRow = card.querySelector('.wait-row');
+    waitRow.innerHTML = '';
+
+    if (hs.completed) {
+      const check = document.createElement('span');
+      check.className = 'check-mark';
+      check.textContent = '✓';
+      waitRow.appendChild(check);
+    } else if (typeof info.wait === 'number') {
+      const num = document.createElement('span');
+      num.className = 'wait-num';
+      num.textContent = info.wait;
+      waitRow.appendChild(num);
+
+      const unit = document.createElement('span');
+      unit.className = 'wait-unit';
+      unit.textContent = 'min';
+      waitRow.appendChild(unit);
+
+      const prevWait = hs.lastWait;
+      if (typeof prevWait === 'number' && prevWait !== info.wait) {
+        const arrow = document.createElement('span');
+        arrow.className = 'trend-arrow ' + (info.wait > prevWait ? 'up' : 'down');
+        arrow.textContent = info.wait > prevWait ? '▲' : '▼';
+        waitRow.appendChild(arrow);
+      }
+      hs.lastWait = info.wait;
+    } else if (info.text) {
+      const num = document.createElement('span');
+      num.className = 'wait-num';
+      num.textContent = info.text;
+      waitRow.appendChild(num);
+    } else {
+      const num = document.createElement('span');
+      num.className = 'wait-num';
+      num.textContent = info.label;
+      waitRow.appendChild(num);
+    }
+
+    const badge = card.querySelector('.badge');
+    badge.textContent = hs.completed ? 'Done' : (info.level === 'missing' ? 'No data' : info.label);
+  }
+  saveState();
+}
+
+// ─── Sort-mode changes: gather-and-deal animation ──────────────────────────
+
+function applySortChange() {
+  if (state.isAnimating) return;
+  state.isAnimating = true;
+  grid.classList.toggle('custom-mode', state.mode === 'custom');
+  document.getElementById('dir-toggle').disabled = state.mode === 'custom';
+  document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
+
+  let newOrder;
+  if (state.mode === 'custom') {
+    if (!state.customOrder) {
+      const rows = HOUSES.slice().sort((a, b) => a.name.localeCompare(b.name));
+      state.customOrder = rows.map(h => h.codeId);
+    }
+    newOrder = state.customOrder.slice();
+  } else {
+    newOrder = computeOrder(state.mode, state.direction);
+  }
+
+  const gridRect = grid.getBoundingClientRect();
+  const centerX = gridRect.width / 2;
+  const centerY = gridRect.height / 2;
+
+  const allCards = Object.values(cardEls);
+  allCards.forEach((card, i) => {
+    card.style.transition = 'transform 1s cubic-bezier(.3,.6,.3,1)';
+    const w = card.getBoundingClientRect().width;
+    const h = card.getBoundingClientRect().height;
+    const rot = (i % 2 === 0 ? 1 : -1) * (4 + i);
+    card.style.zIndex = String(i);
+    card.style.transform = 'translate(' + (centerX - w / 2) + 'px,' + (centerY - h / 2) + 'px) rotate(' + rot + 'deg) scale(.92)';
+  });
+
+  setTimeout(() => {
+    newOrder.forEach((codeId, idx) => {
+      const card = cardEls[codeId];
+      card.style.zIndex = String(idx);
+      card.style.transition = 'transform 1.3s cubic-bezier(.2,.7,.2,1) ' + (idx * 90) + 'ms';
+    });
+    positionCards(newOrder, {});
+
+    setTimeout(() => {
+      allCards.forEach(card => { card.style.zIndex = ''; card.style.transition = 'transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease'; });
+      state.order = newOrder;
+      state.isAnimating = false;
+      saveState();
+    }, 2000);
+  }, 1000);
+}
+
+// ─── Tap to complete / drag to reorder ──────────────────────────────────────
+
+function attachDragHandlers(card, codeId) {
+  let startX = 0, startY = 0, pointerId = null;
+  let armed = false;
+  let longPressTimer = null;
+  const THRESHOLD = 8;
+  const LONG_PRESS_MS = 400;
+
+  function cleanup() {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+    card.classList.remove('pressing', 'dragging');
+    if (pointerId != null) {
+      try { card.releasePointerCapture(pointerId); } catch (e) {}
+    }
+    pointerId = null;
+    armed = false;
+  }
+
+  function arm() {
+    if (armed) return;
+    armed = true;
+    clearTimeout(longPressTimer);
+    card.classList.remove('pressing');
+    card.classList.add('dragging');
+    card.style.transition = 'box-shadow .15s ease';
+    if (!state.customOrder || state.mode !== 'custom') {
+      state.customOrder = state.order.slice();
+    }
+  }
+
+  card.addEventListener('pointerdown', (e) => {
+    if (state.isAnimating) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    pointerId = e.pointerId;
+    card.setPointerCapture(pointerId);
+    card.classList.add('pressing');
+    longPressTimer = setTimeout(arm, LONG_PRESS_MS);
+  });
+
+  card.addEventListener('pointermove', (e) => {
+    if (pointerId == null || e.pointerId !== pointerId) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!armed) {
+      if (Math.hypot(dx, dy) > THRESHOLD) arm();
+      else return;
+    }
+
+    const gridRect = grid.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const px = e.clientX - gridRect.left - cardRect.width / 2;
+    const py = e.clientY - gridRect.top - cardRect.height / 2;
+    card.style.transform = 'translate(' + px + 'px,' + py + 'px) scale(1.04)';
+
+    const pointerCenterX = e.clientX - gridRect.left;
+    const pointerCenterY = e.clientY - gridRect.top;
+    const rects = getSlotRects();
+    let nearestIdx = 0, nearestDist = Infinity;
+    rects.forEach((r, idx) => {
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      const d = Math.hypot(pointerCenterX - cx, pointerCenterY - cy);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = idx; }
+    });
+
+    const currentIdx = state.order.indexOf(codeId);
+    if (nearestIdx !== currentIdx) {
+      const newOrder = state.order.slice();
+      newOrder.splice(currentIdx, 1);
+      newOrder.splice(nearestIdx, 0, codeId);
+      state.order = newOrder;
+      newOrder.forEach((id, idx) => {
+        if (id === codeId) return;
+        const other = cardEls[id];
+        other.style.transition = 'transform .3s ease';
+        const r = rects[idx];
+        other.style.transform = 'translate(' + r.x + 'px,' + r.y + 'px)';
+      });
+    }
+  });
+
+  function finish(e) {
+    if (pointerId == null || (e && e.pointerId !== pointerId)) return;
+    if (armed) {
+      state.mode = 'custom';
+      state.customOrder = state.order.slice();
+      grid.classList.add('custom-mode');
+      document.getElementById('dir-toggle').disabled = true;
+      document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
+      updateSortDropdownLabel();
+      card.style.transition = 'transform .3s ease, box-shadow .15s ease, border-color .15s ease';
+      positionCards(state.order, {});
+      saveState();
+    } else {
+      const dx = e ? e.clientX - startX : 0;
+      const dy = e ? e.clientY - startY : 0;
+      if (Math.hypot(dx, dy) <= THRESHOLD) {
+        toggleCompleted(codeId);
+      }
+    }
+    cleanup();
+  }
+
+  card.addEventListener('pointerup', finish);
+  card.addEventListener('pointercancel', () => {
+    if (armed) positionCards(state.order, { instant: true });
+    cleanup();
+  });
+}
+
+function toggleCompleted(codeId) {
+  const hs = state.houseState[codeId];
+  hs.completed = !hs.completed;
+  renderContent();
+}
+
+// ─── Sort dropdown + direction toggle ──────────────────────────────────────
+
+const MODE_LABELS = { wait: 'Wait Time', alpha: 'Alphabetical', custom: 'Custom' };
+
+function updateSortDropdownLabel() {
+  document.getElementById('sort-dropdown-label').textContent = MODE_LABELS[state.mode];
+  document.querySelectorAll('#sort-dropdown-list li').forEach(li => {
+    li.classList.toggle('selected', li.dataset.mode === state.mode);
+  });
+}
+
+document.getElementById('sort-dropdown-btn').addEventListener('click', () => {
+  const list = document.getElementById('sort-dropdown-list');
+  const btn = document.getElementById('sort-dropdown-btn');
+  const opening = list.hidden;
+  list.hidden = !opening;
+  btn.setAttribute('aria-expanded', String(opening));
+});
+
+document.getElementById('sort-dropdown-list').addEventListener('click', (e) => {
+  const li = e.target.closest('li');
+  if (!li) return;
+  const mode = li.dataset.mode;
+  document.getElementById('sort-dropdown-list').hidden = true;
+  document.getElementById('sort-dropdown-btn').setAttribute('aria-expanded', 'false');
+  if (mode === state.mode) return;
+  state.mode = mode;
+  updateSortDropdownLabel();
+  applySortChange();
+});
+
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('sort-dropdown');
+  if (!dropdown.contains(e.target)) {
+    document.getElementById('sort-dropdown-list').hidden = true;
+    document.getElementById('sort-dropdown-btn').setAttribute('aria-expanded', 'false');
+  }
+});
+
+document.getElementById('dir-toggle').addEventListener('click', () => {
+  if (state.mode === 'custom' || state.isAnimating) return;
+  state.direction = state.direction === 'asc' ? 'desc' : 'asc';
+  applySortChange();
+});
+
+// ─── Hamburger menu + share modal ──────────────────────────────────────────
+
+document.getElementById('hamburger-btn').addEventListener('click', () => {
+  document.getElementById('menu-overlay').hidden = false;
+});
+document.getElementById('menu-close').addEventListener('click', () => {
+  document.getElementById('menu-overlay').hidden = true;
+});
+document.getElementById('menu-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'menu-overlay') e.currentTarget.hidden = true;
 });
 
 function showShare() {
@@ -472,7 +987,10 @@ function showShare() {
   link.href = location.href;
   document.getElementById('share-overlay').hidden = false;
 }
-document.getElementById('share-btn').addEventListener('click', showShare);
+document.getElementById('menu-share-btn').addEventListener('click', () => {
+  document.getElementById('menu-overlay').hidden = true;
+  showShare();
+});
 document.getElementById('share-close').addEventListener('click', () => {
   document.getElementById('share-overlay').hidden = true;
 });
@@ -482,9 +1000,12 @@ document.getElementById('share-overlay').addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  document.getElementById('debug-overlay').hidden = true;
   document.getElementById('share-overlay').hidden = true;
+  document.getElementById('menu-overlay').hidden = true;
+  document.getElementById('sort-dropdown-list').hidden = true;
 });
+
+// ─── Polling ────────────────────────────────────────────────────────────────
 
 let countdownTimer = null;
 function startCountdown() {
@@ -507,9 +1028,17 @@ async function poll() {
     const res = await fetch(LIVE_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const entities = data.liveData || [];
+    state.entities = data.liveData || [];
 
-    render(entities);
+    if (state.mode !== 'custom' && !state.isAnimating) {
+      const newOrder = computeOrder(state.mode, state.direction);
+      const changed = newOrder.some((id, i) => id !== state.order[i]);
+      state.order = newOrder;
+      renderContent();
+      positionCards(state.order, changed ? {} : { instant: true });
+    } else {
+      renderContent();
+    }
 
     dot.className = 'dot live';
     statusText.textContent = 'Live';
@@ -522,13 +1051,23 @@ async function poll() {
     errorBanner.textContent =
       'Could not reach the live wait time feed (' + err.message + '). ' +
       'This can happen if your browser blocks the request, the API is briefly down, or you have no internet connection. Retrying automatically…';
-    render(null);
+    renderContent();
   }
 
   startCountdown();
 }
 
 document.getElementById('refresh-btn').addEventListener('click', poll);
+
+// ─── Boot ───────────────────────────────────────────────────────────────────
+
+loadState();
+buildSlotsAndCards();
+updateSortDropdownLabel();
+document.getElementById('dir-toggle').disabled = state.mode === 'custom';
+document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
+grid.classList.toggle('custom-mode', state.mode === 'custom');
+positionCards(state.order, { instant: true });
 
 poll();
 setInterval(poll, POLL_SECONDS * 1000);
