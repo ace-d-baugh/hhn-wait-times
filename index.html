@@ -126,6 +126,7 @@
     transition:background .15s ease, color .15s ease;
   }
   .view-toggle-btn svg{ width:17px; height:17px; }
+  #view-btn-rides svg{ transform:scaleX(-1); }
   .view-toggle-btn:hover{ color:var(--bone); }
   .view-toggle-btn.active{
     color:var(--blood-bright);
@@ -644,6 +645,10 @@ const state = {
 
 // Resets state to defaults for whichever park is currently loaded in HOUSES.
 // Called on boot and every time the visitor switches parks.
+// Note: this does NOT touch state.entities — the live feed is shared by
+// every view of the same park (one poll serves houses and rides alike), so
+// switching views must never clear it. initPark() clears/reloads entities
+// itself when the park actually changes.
 function resetState() {
   state.mode = 'wait';
   state.direction = 'desc';
@@ -653,7 +658,6 @@ function resetState() {
     state.houseState[h.codeId] = { completed: false, lastWait: null, trend: null };
   }
   state.order = HOUSES.map(h => h.codeId);
-  state.entities = null;
   state.isAnimating = false;
 }
 
@@ -808,6 +812,48 @@ function findEntity(entities, house) {
 
   const attraction = candidates.find(e => e.entityType === 'ATTRACTION');
   return attraction || candidates[0];
+}
+
+// ─── Live-data cache (shared by houses + rides, survives a reload) ────────
+
+const LIVE_CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000; // ignore a cached snapshot older than this
+
+function liveCacheCookieName(parkId) {
+  return 'hhn_live_' + parkId;
+}
+
+// Only the entities actually referenced by this park's houses+rides need to
+// survive — a handful of records, not the whole park feed — so the snapshot
+// comfortably fits in a cookie.
+function saveLiveCache(parkId) {
+  if (!state.entities) return;
+  const park = PARKS[parkId];
+  const wanted = [...park.houses, ...park.rides];
+  const matched = [];
+  const seen = new Set();
+  for (const item of wanted) {
+    const entity = findEntity(state.entities, item);
+    if (entity && !seen.has(entity.id)) {
+      seen.add(entity.id);
+      matched.push(entity);
+    }
+  }
+  setCookie(liveCacheCookieName(parkId), JSON.stringify({ t: Date.now(), entities: matched }), 1);
+}
+
+// Called right after a park (re)boots, before the first live fetch resolves,
+// so cards can paint with last-known wait times instead of "No data".
+function loadLiveCache(parkId) {
+  const raw = getCookie(liveCacheCookieName(parkId));
+  if (!raw) return;
+  try {
+    const snap = JSON.parse(raw);
+    if (Date.now() - snap.t < LIVE_CACHE_MAX_AGE_MS && Array.isArray(snap.entities)) {
+      state.entities = snap.entities;
+    }
+  } catch (e) {
+    // Corrupt/old cookie shape — ignore, next real poll will fix it.
+  }
 }
 
 function classify(entity) {
@@ -1435,6 +1481,7 @@ async function fetchLiveData() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     state.entities = data.liveData || [];
+    saveLiveCache(currentParkId);
     dot.className = 'dot live';
     statusText.textContent = 'Live';
     errorBanner.style.display = 'none';
@@ -1502,6 +1549,9 @@ function initPark(parkId) {
   LIVE_URL = park.liveUrl;
   updateViewLabels();
 
+  state.entities = null;
+  loadLiveCache(parkId);
+
   resetState();
   loadState();
   buildSlotsAndCards();
@@ -1509,6 +1559,8 @@ function initPark(parkId) {
   document.getElementById('dir-toggle').disabled = state.mode === 'custom';
   document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
   grid.classList.toggle('custom-mode', state.mode === 'custom');
+  if (state.entities) updateWaitTrends();
+  renderContent();
   positionCards(state.order, { instant: true });
 
   clearInterval(pollTimer);
@@ -1558,10 +1610,6 @@ async function switchView(view) {
     card.style.transform = 'translate(' + (centerX - w / 2) + 'px,' + (centerY - h / 2) + 'px) rotate(' + rot + 'deg) scale(.92)';
   });
 
-  // Refresh live data in parallel with the exit animation, so the incoming
-  // view never renders with stale wait times.
-  const fetchPromise = fetchLiveData();
-
   await wait(500);
 
   // Phase 2: fling the whole gathered stack off toward the outgoing view's
@@ -1571,17 +1619,19 @@ async function switchView(view) {
     card.style.transform = 'translate(' + (centerX + offX(exitSide)) + 'px,' + centerY + 'px) rotate(' + (exitSide === 'left' ? -20 : 20) + 'deg) scale(.85)';
   });
 
-  await Promise.all([wait(450), fetchPromise]);
+  await wait(450);
 
-  // Phase 3: swap the dataset + cookie for the new view and rebuild the
-  // grid, staging every new card at the exact same off-screen stack point
-  // on its entering side.
+  // Phase 3: swap the dataset for the new view and rebuild the grid,
+  // staging every new card at the exact same off-screen stack point on its
+  // entering side. state.entities is untouched by resetState() — houses and
+  // rides share the one live feed from the regular 30s poll, so the new
+  // view renders with data that's already there, no extra fetch needed.
   currentView = view;
   HOUSES = view === 'rides' ? PARKS[currentParkId].rides : PARKS[currentParkId].houses;
   updateViewLabels();
   resetState();
   loadState();
-  updateWaitTrends();
+  if (state.entities) updateWaitTrends();
   buildSlotsAndCards();
 
   const newOrder = (state.mode === 'custom' && state.customOrder)
@@ -1640,11 +1690,6 @@ async function switchView(view) {
   });
   state.isAnimating = false;
   saveState();
-
-  // The data we just fetched should count as this cycle's refresh.
-  clearInterval(pollTimer);
-  startCountdown();
-  pollTimer = setInterval(poll, POLL_SECONDS * 1000);
 }
 
 document.getElementById('view-btn-houses').addEventListener('click', () => switchView('houses'));
