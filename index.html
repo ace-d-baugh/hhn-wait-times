@@ -88,6 +88,7 @@
   }
   .subtitle + .subtitle{ margin-top:2px; }
   .subtitle:empty{ display:none; }
+  #park-hours-line{ color:var(--blood-bright); font-weight:700; }
   @media (max-width:820px){
     h1{ font-size:clamp(22px, 6vw, 34px); letter-spacing:1px; }
     .subtitle{ font-size:clamp(10px, 2.6vw, 13px); letter-spacing:1.5px; }
@@ -282,12 +283,10 @@
   .lvl-missing{ opacity:.4; }
   .lvl-missing .wait-num{ font-size:clamp(11px, 2vh, 18px); color:var(--muted); }
 
-  .opens-note{
-    flex:0 0 auto; width:100%; text-align:center;
-    font-size:clamp(8px, 1.1vh, 11px); color:var(--muted); letter-spacing:.2px;
-    margin-top:2px;
-  }
-  .opens-note:empty{ display:none; }
+  /* The "Opens at HH:MM" text (closed, outside event hours) reuses .wait-num
+     but runs longer than "Closed", so it needs a smaller size and the
+     ability to wrap onto a second line instead of overflowing the card. */
+  .lvl-closed .wait-num.opens-at{ font-size:clamp(11px, 1.8vh, 15px); white-space:normal; line-height:1.25; }
 
   footer{
     flex:0 0 auto;
@@ -487,12 +486,16 @@ const PARKS = {
     // Nightly HHN event window, 24h "HH:MM" — shown under the header and used
     // as the default "opens at" time for any house below that doesn't set
     // its own `opensAt` (i.e. houses with no early/staggered opening).
-    hours: { open: '19:00', close: '01:00' },
+    // Per HHN 35 coverage: official event runs 6:30 PM-2:00 AM.
+    hours: { open: '18:30', close: '02:00' },
     houses: [
       { name: 'Sinners', keywords: ['sinners'] },
-      { name: 'Hellraiser', keywords: ['hellraiser'] },
-      { name: 'Stranger Things 5', keywords: ['stranger things'], exclude: ['show', 'experience', 'store', 'tribute'] },
-      { name: 'Jack and Oddfellow: Chaos and Control', keywords: ['jack and oddfellow', 'oddfellow'] },
+      // These three are reported as the "Stay & Scream" early-access houses,
+      // open at 2:00 PM for eligible daytime/hotel guests — verify against
+      // Universal's current schedule, as house-by-house times shift by year.
+      { name: 'Hellraiser', keywords: ['hellraiser'], opensAt: '14:00' },
+      { name: 'Stranger Things 5', keywords: ['stranger things'], exclude: ['show', 'experience', 'store', 'tribute'], opensAt: '14:00' },
+      { name: 'Jack and Oddfellow: Chaos and Control', keywords: ['jack and oddfellow', 'oddfellow'], opensAt: '14:00' },
       { name: 'Madlands: Caged Cannibals', keywords: ['madlands', 'caged cannibals'] },
       { name: 'H.R. Bloodengutz: A Halloween Fright-Tacular', keywords: ['bloodengutz', 'fright-tacular', 'fright tacular'] },
       { name: 'Cybergoria', keywords: ['cybergoria'] },
@@ -505,6 +508,10 @@ const PARKS = {
     label: 'Universal Studios Hollywood',
     liveUrl: 'https://api.themeparks.wiki/v1/entity/bc4005c5-8c7e-41d7-b349-cdddf1796427/live',
     stateCookie: 'hhn_state_hollywood',
+    // General event start is 7:00 PM; Early Access (5:30 PM) opens select
+    // Lower Lot houses, but which specific houses get early access wasn't
+    // confidently sourced — none are set below, so they all default to the
+    // 7:00 PM general start until confirmed.
     hours: { open: '19:00', close: '01:00' },
     houses: [
       { name: 'Sinners', keywords: ['sinners'] },
@@ -643,19 +650,41 @@ function loadState() {
 // clock time (today if it hasn't passed yet, otherwise tomorrow) and formats
 // a note for the card. The date is only spelled out when that next opening
 // isn't today, per the "day of" rule.
+function formatTime12(h, m) {
+  const period = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  return h12 + ':' + String(m).padStart(2, '0') + ' ' + period;
+}
+
 function formatOpensNote(opensAtHHMM) {
   const [h, m] = opensAtHHMM.split(':').map(Number);
   const now = new Date();
   const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
 
-  const timeStr = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  const timeStr = formatTime12(h, m);
   if (next.toDateString() === now.toDateString()) {
     return 'Opens at ' + timeStr;
   }
   const mm = String(next.getMonth() + 1).padStart(2, '0');
   const dd = String(next.getDate()).padStart(2, '0');
   return 'Opens ' + mm + '/' + dd + ' at ' + timeStr;
+}
+
+// True while the current time falls inside a park's nightly event window.
+// Handles windows that cross midnight (e.g. 18:30–02:00).
+function isWithinEventHours(hours) {
+  const [oh, om] = hours.open.split(':').map(Number);
+  const [ch, cm] = hours.close.split(':').map(Number);
+  const openMin = oh * 60 + om;
+  const closeMin = ch * 60 + cm;
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  if (closeMin <= openMin) {
+    return nowMin >= openMin || nowMin < closeMin;
+  }
+  return nowMin >= openMin && nowMin < closeMin;
 }
 
 // ─── Live data matching (unchanged logic) ──────────────────────────────────
@@ -795,12 +824,8 @@ function buildSlotsAndCards() {
     const waitRow = document.createElement('div');
     waitRow.className = 'wait-row';
 
-    const opensNote = document.createElement('div');
-    opensNote.className = 'opens-note';
-
     card.appendChild(name);
     card.appendChild(waitRow);
-    card.appendChild(opensNote);
     grid.appendChild(card);
     cardEls[house.codeId] = card;
 
@@ -853,12 +878,25 @@ window.addEventListener('resize', () => {
 // ─── Rendering card content ─────────────────────────────────────────────────
 
 function renderContent() {
+  const hours = PARKS[currentParkId].hours;
+  const withinHours = isWithinEventHours(hours);
+
   for (const house of HOUSES) {
     const card = cardEls[house.codeId];
     const { info } = getHouseInfo(house);
     const hs = state.houseState[house.codeId];
 
-    card.className = 'card lvl-' + info.level + (hs.completed ? ' completed' : '');
+    // A house reporting "down" during event hours is just a technical
+    // hiccup, not a scheduling gap — show it the same as a plain closed
+    // house rather than the flashing "down" state.
+    const level = (info.level === 'down' && withinHours) ? 'closed' : info.level;
+    // Outside event hours, a closed house hasn't opened for the night yet —
+    // show when it will instead of a bare "Closed". During event hours a
+    // closed house is either between scheduled slots or has a real issue,
+    // so there's no meaningful opening time to promise.
+    const showOpensAt = level === 'closed' && !withinHours && !hs.completed;
+
+    card.className = 'card lvl-' + level + (hs.completed ? ' completed' : '');
 
     const waitRow = card.querySelector('.wait-row');
     waitRow.innerHTML = '';
@@ -868,6 +906,12 @@ function renderContent() {
       check.className = 'check-mark';
       check.textContent = '✓';
       waitRow.appendChild(check);
+    } else if (showOpensAt) {
+      const opensAt = house.opensAt || hours.open;
+      const num = document.createElement('span');
+      num.className = 'wait-num opens-at';
+      num.textContent = formatOpensNote(opensAt);
+      waitRow.appendChild(num);
     } else if (typeof info.wait === 'number') {
       const num = document.createElement('span');
       num.className = 'wait-num';
@@ -893,16 +937,8 @@ function renderContent() {
     } else {
       const num = document.createElement('span');
       num.className = 'wait-num';
-      num.textContent = info.label;
+      num.textContent = level === 'closed' ? 'Closed' : info.label;
       waitRow.appendChild(num);
-    }
-
-    const opensNote = card.querySelector('.opens-note');
-    if (info.level === 'closed' && !hs.completed) {
-      const opensAt = house.opensAt || PARKS[currentParkId].hours.open;
-      opensNote.textContent = formatOpensNote(opensAt);
-    } else {
-      opensNote.textContent = '';
     }
   }
   saveState();
@@ -1322,7 +1358,10 @@ function initPark(parkId) {
   HOUSES = park.houses;
   LIVE_URL = park.liveUrl;
   document.getElementById('subtitle').textContent = 'Live House Wait Times and Tracker';
-  document.getElementById('park-hours-line').textContent = park.label + ': ' + park.hours.open + ' - ' + park.hours.close;
+  const [openH, openM] = park.hours.open.split(':').map(Number);
+  const [closeH, closeM] = park.hours.close.split(':').map(Number);
+  document.getElementById('park-hours-line').textContent =
+    park.label + ': ' + formatTime12(openH, openM) + ' - ' + formatTime12(closeH, closeM);
 
   resetState();
   loadState();
