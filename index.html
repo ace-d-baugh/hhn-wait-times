@@ -1300,8 +1300,17 @@ if (!bootParkId && getCookie('hhn_state')) {
 
 if (bootParkId === 'orlando' || bootParkId === 'hollywood') {
   initPark(bootParkId);
+  // A link (e.g. the "Change Parks" section on the About page) can send
+  // visitors here with ?changePark=1 to jump straight to the picker.
+  if (new URLSearchParams(location.search).has('changePark')) {
+    openParkModal({ forced: false });
+  }
 } else {
   openParkModal({ forced: true });
+}
+
+if (new URLSearchParams(location.search).has('changePark')) {
+  history.replaceState(null, '', location.pathname);
 }
 </script>
 </body>
