@@ -425,6 +425,7 @@
     padding:12px 10px; border-radius:8px; cursor:pointer; text-decoration:none;
   }
   .menu-panel a:hover, .menu-panel button.menu-link:hover{ background:rgba(255,42,58,.12); color:var(--blood-bright); }
+  .menu-panel a[hidden]{ display:none; }
 </style>
 </head>
 <body>
@@ -502,14 +503,15 @@
 <div class="modal-overlay menu-overlay" id="menu-overlay" hidden>
   <nav class="menu-panel">
     <button class="modal-close" id="menu-close" aria-label="Close menu">&times;</button>
-    <button type="button" class="menu-link" id="menu-park-btn">Change Park</button>
+    <a href="shows.html" id="menu-shows-link" hidden>Shows</a>
     <a href="about.html">About</a>
+    <button type="button" class="menu-link" id="menu-share-btn">Share</button>
+    <a href="projects.html">More Projects</a>
+    <button type="button" class="menu-link" id="menu-park-btn">Change Park</button>
     <div class="kofi-slot menu-kofi">
       <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
       <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
     </div>
-    <button type="button" class="menu-link" id="menu-share-btn">Share</button>
-    <a href="projects.html">More Projects</a>
   </nav>
 </div>
 
@@ -1588,6 +1590,9 @@ function updateViewLabels() {
   document.getElementById('view-btn-houses').setAttribute('aria-selected', String(currentView === 'houses'));
   document.getElementById('view-btn-rides').classList.toggle('active', currentView === 'rides');
   document.getElementById('view-btn-rides').setAttribute('aria-selected', String(currentView === 'rides'));
+
+  // The stage-show schedule only exists for Orlando so far.
+  document.getElementById('menu-shows-link').hidden = currentParkId !== 'orlando';
 }
 
 function initPark(parkId) {
