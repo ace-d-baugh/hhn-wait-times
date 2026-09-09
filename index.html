@@ -314,16 +314,16 @@
   .trend-arrow.down{ color:var(--sick-green); }
   .check-mark{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(24px, 6.4vh, 54px); line-height:1; color:var(--sick-green); }
 
-  .lvl-low .wait-num{ color:var(--sick-green); }
-  .lvl-med .wait-num{ color:var(--pumpkin); }
-  .lvl-high .wait-num{ color:var(--blood-bright); }
+  .lvl-low .wait-num{ color:var(--sick-green); text-shadow:0 0 6px rgba(126,245,66,.7), 0 0 16px rgba(126,245,66,.35), 1px 1px 0 #000; }
+  .lvl-med .wait-num{ color:var(--pumpkin); text-shadow:0 0 6px rgba(255,117,24,.7), 0 0 16px rgba(255,117,24,.35), 1px 1px 0 #000; }
+  .lvl-high .wait-num{ color:var(--blood-bright); text-shadow:0 0 6px rgba(255,42,58,.7), 0 0 16px rgba(255,42,58,.35), 1px 1px 0 #000; }
 
   .lvl-open .wait-num{ color:var(--bone); font-size:clamp(14px, 3vh, 26px); }
 
   .lvl-closed{ opacity:.5; }
   .lvl-closed .wait-num{ color:var(--muted); font-size:clamp(13px, 2.6vh, 22px); }
 
-  .lvl-down .wait-num{ color:var(--blood-bright); font-size:clamp(13px, 2.6vh, 22px); animation:flash 1s infinite; }
+  .lvl-down .wait-num{ color:var(--blood-bright); font-size:clamp(13px, 2.6vh, 22px); animation:flash 1s infinite; text-shadow:0 0 6px rgba(255,42,58,.7), 0 0 16px rgba(255,42,58,.35), 1px 1px 0 #000; }
   @keyframes flash{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
 
   .lvl-missing{ opacity:.4; }
