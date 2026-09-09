@@ -86,6 +86,8 @@
     letter-spacing:2px;
     text-transform:uppercase;
   }
+  .subtitle + .subtitle{ margin-top:2px; }
+  .subtitle:empty{ display:none; }
   @media (max-width:820px){
     h1{ font-size:clamp(22px, 6vw, 34px); letter-spacing:1px; }
     .subtitle{ font-size:clamp(10px, 2.6vw, 13px); letter-spacing:1.5px; }
@@ -280,6 +282,13 @@
   .lvl-missing{ opacity:.4; }
   .lvl-missing .wait-num{ font-size:clamp(11px, 2vh, 18px); color:var(--muted); }
 
+  .opens-note{
+    flex:0 0 auto; width:100%; text-align:center;
+    font-size:clamp(8px, 1.1vh, 11px); color:var(--muted); letter-spacing:.2px;
+    margin-top:2px;
+  }
+  .opens-note:empty{ display:none; }
+
   footer{
     flex:0 0 auto;
     text-align:center;
@@ -371,6 +380,7 @@
     <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu"><span></span><span></span><span></span></button>
     <h1>HHN Wait Tracker</h1>
     <div class="subtitle" id="subtitle">Live House Wait Times and Tracker</div>
+    <div class="subtitle" id="park-hours-line"></div>
   </header>
 
   <div class="status-bar">
@@ -474,6 +484,10 @@ const PARKS = {
     label: 'Universal Studios Florida',
     liveUrl: 'https://api.themeparks.wiki/v1/entity/89db5d43-c434-4097-b71f-f6869f495a22/live',
     stateCookie: 'hhn_state',
+    // Nightly HHN event window, 24h "HH:MM" — shown under the header and used
+    // as the default "opens at" time for any house below that doesn't set
+    // its own `opensAt` (i.e. houses with no early/staggered opening).
+    hours: { open: '19:00', close: '01:00' },
     houses: [
       { name: 'Sinners', keywords: ['sinners'] },
       { name: 'Hellraiser', keywords: ['hellraiser'] },
@@ -491,6 +505,7 @@ const PARKS = {
     label: 'Universal Studios Hollywood',
     liveUrl: 'https://api.themeparks.wiki/v1/entity/bc4005c5-8c7e-41d7-b349-cdddf1796427/live',
     stateCookie: 'hhn_state_hollywood',
+    hours: { open: '19:00', close: '01:00' },
     houses: [
       { name: 'Sinners', keywords: ['sinners'] },
       { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'] },
@@ -620,6 +635,27 @@ function loadState() {
     if (mode === 'wait' || mode === 'alpha') state.mode = mode;
     if (direction === 'asc' || direction === 'desc') state.direction = direction;
   }
+}
+
+// ─── House opening-time note (shown on closed cards) ───────────────────────
+
+// Given a house's "HH:MM" opening time, finds the next occurrence of that
+// clock time (today if it hasn't passed yet, otherwise tomorrow) and formats
+// a note for the card. The date is only spelled out when that next opening
+// isn't today, per the "day of" rule.
+function formatOpensNote(opensAtHHMM) {
+  const [h, m] = opensAtHHMM.split(':').map(Number);
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+
+  const timeStr = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  if (next.toDateString() === now.toDateString()) {
+    return 'Opens at ' + timeStr;
+  }
+  const mm = String(next.getMonth() + 1).padStart(2, '0');
+  const dd = String(next.getDate()).padStart(2, '0');
+  return 'Opens ' + mm + '/' + dd + ' at ' + timeStr;
 }
 
 // ─── Live data matching (unchanged logic) ──────────────────────────────────
@@ -759,8 +795,12 @@ function buildSlotsAndCards() {
     const waitRow = document.createElement('div');
     waitRow.className = 'wait-row';
 
+    const opensNote = document.createElement('div');
+    opensNote.className = 'opens-note';
+
     card.appendChild(name);
     card.appendChild(waitRow);
+    card.appendChild(opensNote);
     grid.appendChild(card);
     cardEls[house.codeId] = card;
 
@@ -855,6 +895,14 @@ function renderContent() {
       num.className = 'wait-num';
       num.textContent = info.label;
       waitRow.appendChild(num);
+    }
+
+    const opensNote = card.querySelector('.opens-note');
+    if (info.level === 'closed' && !hs.completed) {
+      const opensAt = house.opensAt || PARKS[currentParkId].hours.open;
+      opensNote.textContent = formatOpensNote(opensAt);
+    } else {
+      opensNote.textContent = '';
     }
   }
   saveState();
@@ -1273,7 +1321,8 @@ function initPark(parkId) {
   const park = PARKS[parkId];
   HOUSES = park.houses;
   LIVE_URL = park.liveUrl;
-  document.getElementById('subtitle').textContent = 'Live House Wait Times and Tracker — ' + park.label;
+  document.getElementById('subtitle').textContent = 'Live House Wait Times and Tracker';
+  document.getElementById('park-hours-line').textContent = park.label + ': ' + park.hours.open + ' - ' + park.hours.close;
 
   resetState();
   loadState();
