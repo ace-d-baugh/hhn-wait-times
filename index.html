@@ -283,10 +283,17 @@
   .lvl-missing{ opacity:.4; }
   .lvl-missing .wait-num{ font-size:clamp(11px, 2vh, 18px); color:var(--muted); }
 
-  /* The "Opens at HH:MM" text (closed, outside event hours) reuses .wait-num
-     but runs longer than "Closed", so it needs a smaller size and the
-     ability to wrap onto a second line instead of overflowing the card. */
-  .lvl-closed .wait-num.opens-at{ font-size:clamp(11px, 1.8vh, 15px); white-space:normal; line-height:1.25; }
+  /* The opens-at block (closed, outside event hours) reuses .wait-num's grid
+     placement but stacks its own two lines: a small "Opens at" label at the
+     old opens-at text size, and the time itself bigger and glowing red. */
+  .wait-num.opens-at{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .opens-label{ font-size:clamp(11px, 1.8vh, 15px); color:var(--muted); font-weight:600; letter-spacing:.2px; }
+  .opens-time{
+    font-family:'Oswald', sans-serif; font-weight:700;
+    font-size:clamp(20px, 4.4vh, 34px); line-height:1;
+    color:var(--blood-bright);
+    text-shadow:0 0 8px rgba(255,42,58,.8), 0 0 18px rgba(255,42,58,.45);
+  }
 
   footer{
     flex:0 0 auto;
@@ -485,43 +492,37 @@ const PARKS = {
     stateCookie: 'hhn_state',
     // Nightly HHN event window, 24h "HH:MM" — shown under the header and used
     // as the default "opens at" time for any house below that doesn't set
-    // its own `opensAt` (i.e. houses with no early/staggered opening).
-    // Per HHN 35 coverage: official event runs 6:30 PM-2:00 AM.
+    // its own `opensAt`. Per WDWNT's HHN 35 guide: event runs 6:30 PM-2:00 AM,
+    // with houses opening in phases from 2 PM.
     hours: { open: '18:30', close: '02:00' },
     houses: [
-      { name: 'Sinners', keywords: ['sinners'] },
-      // These three are reported as the "Stay & Scream" early-access houses,
-      // open at 2:00 PM for eligible daytime/hotel guests — verify against
-      // Universal's current schedule, as house-by-house times shift by year.
+      { name: 'Sinners', keywords: ['sinners'], opensAt: '17:15' },
       { name: 'Hellraiser', keywords: ['hellraiser'], opensAt: '14:00' },
       { name: 'Stranger Things 5', keywords: ['stranger things'], exclude: ['show', 'experience', 'store', 'tribute'], opensAt: '14:00' },
       { name: 'Jack and Oddfellow: Chaos and Control', keywords: ['jack and oddfellow', 'oddfellow'], opensAt: '14:00' },
-      { name: 'Madlands: Caged Cannibals', keywords: ['madlands', 'caged cannibals'] },
-      { name: 'H.R. Bloodengutz: A Halloween Fright-Tacular', keywords: ['bloodengutz', 'fright-tacular', 'fright tacular'] },
-      { name: 'Cybergoria', keywords: ['cybergoria'] },
-      { name: 'INVASION: Alien Abduction', keywords: ['invasion', 'alien abduction'] },
-      { name: 'Evil Dead Burn', keywords: ['evil dead'] },
-      { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'] }
+      { name: 'Madlands: Caged Cannibals', keywords: ['madlands', 'caged cannibals'], opensAt: '18:00' },
+      { name: 'H.R. Bloodengutz: A Halloween Fright-Tacular', keywords: ['bloodengutz', 'fright-tacular', 'fright tacular'], opensAt: '17:45' },
+      { name: 'Cybergoria', keywords: ['cybergoria'], opensAt: '17:45' },
+      { name: 'INVASION: Alien Abduction', keywords: ['invasion', 'alien abduction'], opensAt: '18:00' },
+      { name: 'Evil Dead Burn', keywords: ['evil dead'], opensAt: '17:45' },
+      { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'], opensAt: '17:15' }
     ].map((h, i) => ({ ...h, codeId: i }))
   },
   hollywood: {
     label: 'Universal Studios Hollywood',
     liveUrl: 'https://api.themeparks.wiki/v1/entity/bc4005c5-8c7e-41d7-b349-cdddf1796427/live',
     stateCookie: 'hhn_state_hollywood',
-    // General event start is 7:00 PM; Early Access (5:30 PM) opens select
-    // Lower Lot houses, but which specific houses get early access wasn't
-    // confidently sourced — none are set below, so they all default to the
-    // 7:00 PM general start until confirmed.
-    hours: { open: '19:00', close: '01:00' },
+    // Event runs 7:00 PM-2:00 AM; all houses open at 5:30 PM Early Access.
+    hours: { open: '19:00', close: '02:00' },
     houses: [
-      { name: 'Sinners', keywords: ['sinners'] },
-      { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'] },
-      { name: 'Hellraiser', keywords: ['hellraiser'] },
-      { name: 'Dead, Deader, Deadest', keywords: ['deader', 'deadest'] },
-      { name: 'Stranger Things 5', keywords: ['stranger things'], exclude: ['show', 'experience', 'store', 'tribute'] },
-      { name: 'KILLceañera: Music by SLASH', keywords: ['killcea', 'music by slash'] },
-      { name: 'Evil Dead Burn', keywords: ['evil dead'] },
-      { name: 'Killer Klowns from Outer Space', keywords: ['killer klowns'] }
+      { name: 'Sinners', keywords: ['sinners'], opensAt: '17:30' },
+      { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'], opensAt: '17:30' },
+      { name: 'Hellraiser', keywords: ['hellraiser'], opensAt: '17:30' },
+      { name: 'Dead, Deader, Deadest', keywords: ['deader', 'deadest'], opensAt: '17:30' },
+      { name: 'Stranger Things 5', keywords: ['stranger things'], exclude: ['show', 'experience', 'store', 'tribute'], opensAt: '17:30' },
+      { name: 'KILLceañera: Music by SLASH', keywords: ['killcea', 'music by slash'], opensAt: '17:30' },
+      { name: 'Evil Dead Burn', keywords: ['evil dead'], opensAt: '17:30' },
+      { name: 'Killer Klowns from Outer Space', keywords: ['killer klowns'], opensAt: '17:30' }
     ].map((h, i) => ({ ...h, codeId: i }))
   }
 };
@@ -657,19 +658,21 @@ function formatTime12(h, m) {
   return h12 + ':' + String(m).padStart(2, '0') + ' ' + period;
 }
 
+// Returns { label, time } instead of one string so the card can render the
+// label small and the time itself bigger, on its own line.
 function formatOpensNote(opensAtHHMM) {
   const [h, m] = opensAtHHMM.split(':').map(Number);
   const now = new Date();
   const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
 
-  const timeStr = formatTime12(h, m);
+  const time = formatTime12(h, m);
   if (next.toDateString() === now.toDateString()) {
-    return 'Opens at ' + timeStr;
+    return { label: 'Opens at', time };
   }
   const mm = String(next.getMonth() + 1).padStart(2, '0');
   const dd = String(next.getDate()).padStart(2, '0');
-  return 'Opens ' + mm + '/' + dd + ' at ' + timeStr;
+  return { label: 'Opens ' + mm + '/' + dd + ' at', time };
 }
 
 // True while the current time falls inside a park's nightly event window.
@@ -908,10 +911,22 @@ function renderContent() {
       waitRow.appendChild(check);
     } else if (showOpensAt) {
       const opensAt = house.opensAt || hours.open;
-      const num = document.createElement('span');
-      num.className = 'wait-num opens-at';
-      num.textContent = formatOpensNote(opensAt);
-      waitRow.appendChild(num);
+      const { label, time } = formatOpensNote(opensAt);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'wait-num opens-at';
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'opens-label';
+      labelEl.textContent = label;
+
+      const timeEl = document.createElement('div');
+      timeEl.className = 'opens-time';
+      timeEl.textContent = time;
+
+      wrap.appendChild(labelEl);
+      wrap.appendChild(timeEl);
+      waitRow.appendChild(wrap);
     } else if (typeof info.wait === 'number') {
       const num = document.createElement('span');
       num.className = 'wait-num';
