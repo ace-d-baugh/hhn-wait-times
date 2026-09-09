@@ -540,6 +540,7 @@ const NO_WAIT_SENTINEL = 999;
 const PARKS = {
   orlando: {
     label: 'Universal Studios Florida',
+    timeZone: 'America/New_York',
     liveUrl: 'https://api.themeparks.wiki/v1/entity/89db5d43-c434-4097-b71f-f6869f495a22/live',
     stateCookie: 'hhn_state',
     // Nightly HHN event window, 24h "HH:MM" — shown under the header and used
@@ -571,6 +572,7 @@ const PARKS = {
   },
   hollywood: {
     label: 'Universal Studios Hollywood',
+    timeZone: 'America/Los_Angeles',
     liveUrl: 'https://api.themeparks.wiki/v1/entity/bc4005c5-8c7e-41d7-b349-cdddf1796427/live',
     stateCookie: 'hhn_state_hollywood',
     // Event runs 7:00 PM-2:00 AM; all houses open at 5:30 PM Early Access.
@@ -745,42 +747,73 @@ function formatTime12(h, m) {
   return h12 + ':' + String(m).padStart(2, '0') + ' ' + period;
 }
 
-// Returns { label, time } instead of one string so the card can render the
-// label small and the time itself bigger, on its own line.
-// Finds the next occurrence (as a Date) of a house's "HH:MM" opening time —
-// today if it hasn't passed yet, otherwise tomorrow. Shared by the opens-at
-// card text and by the wait-time sort's "soonest opening first" ordering.
-function nextOpenTime(opensAtHHMM) {
+// All "what time is it right now" logic below reads the *park's* local wall
+// clock (via its IANA time zone), never the visitor's device time zone —
+// otherwise someone checking Orlando's tracker from the West Coast (or
+// Hollywood's from the East Coast) would see wrong opening times and event-
+// hours status.
+function parkNowParts() {
+  const timeZone = PARKS[currentParkId].timeZone;
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  });
+  const parts = {};
+  fmt.formatToParts(new Date()).forEach(p => { if (p.type !== 'literal') parts[p.type] = p.value; });
+  return {
+    year: parseInt(parts.year, 10),
+    month: parseInt(parts.month, 10),
+    day: parseInt(parts.day, 10),
+    hour: parseInt(parts.hour, 10) % 24, // some locales report midnight as "24"
+    minute: parseInt(parts.minute, 10)
+  };
+}
+
+// Finds the next occurrence of a house's "HH:MM" opening time in the park's
+// own time zone — today if it hasn't passed yet there, otherwise tomorrow
+// (park-local calendar day). Shared by the opens-at card text and by the
+// wait-time sort's "soonest opening first" ordering.
+function nextOpenInfo(opensAtHHMM) {
   const [h, m] = opensAtHHMM.split(':').map(Number);
-  const now = new Date();
-  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-  if (next <= now) next.setDate(next.getDate() + 1);
-  return next;
+  const now = parkNowParts();
+  const nowMin = now.hour * 60 + now.minute;
+  const targetMin = h * 60 + m;
+  const rolled = targetMin <= nowMin;
+  const minutesUntil = rolled ? (targetMin - nowMin + 1440) : (targetMin - nowMin);
+
+  let year = now.year, month = now.month, day = now.day;
+  if (rolled) {
+    // Pure calendar-day rollover math — these y/m/d values are just being
+    // treated as a date, not converted between time zones.
+    const rolledDate = new Date(Date.UTC(year, month - 1, day + 1));
+    year = rolledDate.getUTCFullYear();
+    month = rolledDate.getUTCMonth() + 1;
+    day = rolledDate.getUTCDate();
+  }
+
+  return { hour: h, minute: m, isToday: !rolled, year, month, day, minutesUntil };
 }
 
 function formatOpensNote(opensAtHHMM) {
-  const next = nextOpenTime(opensAtHHMM);
-  const now = new Date();
-  const [h, m] = opensAtHHMM.split(':').map(Number);
-
-  const time = formatTime12(h, m);
-  if (next.toDateString() === now.toDateString()) {
+  const info = nextOpenInfo(opensAtHHMM);
+  const time = formatTime12(info.hour, info.minute);
+  if (info.isToday) {
     return { label: 'Opens at', time };
   }
-  const mm = String(next.getMonth() + 1).padStart(2, '0');
-  const dd = String(next.getDate()).padStart(2, '0');
+  const mm = String(info.month).padStart(2, '0');
+  const dd = String(info.day).padStart(2, '0');
   return { label: 'Opens ' + mm + '/' + dd + ' at', time };
 }
 
-// True while the current time falls inside a park's nightly event window.
-// Handles windows that cross midnight (e.g. 18:30–02:00).
+// True while the park's own local time falls inside its nightly event
+// window. Handles windows that cross midnight (e.g. 18:30–02:00).
 function isWithinEventHours(hours) {
   const [oh, om] = hours.open.split(':').map(Number);
   const [ch, cm] = hours.close.split(':').map(Number);
   const openMin = oh * 60 + om;
   const closeMin = ch * 60 + cm;
-  const now = new Date();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const now = parkNowParts();
+  const nowMin = now.hour * 60 + now.minute;
   if (closeMin <= openMin) {
     return nowMin >= openMin || nowMin < closeMin;
   }
@@ -930,9 +963,9 @@ function computeOrder(mode, direction) {
     numeric.sort((a, b) => a.info.wait - b.info.wait);
     if (direction === 'desc') numeric.reverse();
     other.sort((a, b) => {
-      const aOpen = nextOpenTime(a.house.opensAt || parkHours.open);
-      const bOpen = nextOpenTime(b.house.opensAt || parkHours.open);
-      return aOpen - bOpen;
+      const aMin = nextOpenInfo(a.house.opensAt || parkHours.open).minutesUntil;
+      const bMin = nextOpenInfo(b.house.opensAt || parkHours.open).minutesUntil;
+      return aMin - bMin;
     });
     ids = [...numeric, ...other].map(r => r.house.codeId);
   }
