@@ -247,15 +247,20 @@
     text-align:center;
   }
 
-  .wait-row{ flex:1 1 auto; width:100%; display:flex; align-items:center; justify-content:center; gap:6px; }
+  /* 3-column grid (spacer / content / spacer) keeps the middle column
+     (the wait number) visually centered in the row no matter whether the
+     trend arrow is present in the right column — the arrow rides beside
+     the number instead of shifting its center. */
+  .wait-row{ flex:1 1 auto; width:100%; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; }
+  .wait-row .wait-num, .wait-row .check-mark{ grid-column:2; justify-self:center; }
+  .wait-row .trend-arrow{ grid-column:3; justify-self:start; margin-left:2px; }
   .wait-num{
     font-family:'Oswald', sans-serif;
     font-weight:700;
     font-size:clamp(24px, 6.4vh, 54px);
     line-height:1;
   }
-  .wait-unit{ font-size:clamp(9px, 1.2vh, 13px); color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-  .trend-arrow{ font-size:clamp(12px, 2vh, 18px); line-height:1; }
+  .trend-arrow{ font-size:clamp(24px, 4vh, 36px); line-height:1; }
   .trend-arrow.up{ color:var(--blood-bright); }
   .trend-arrow.down{ color:var(--sick-green); }
   .check-mark{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(24px, 6.4vh, 54px); line-height:1; color:var(--sick-green); }
@@ -829,11 +834,6 @@ function renderContent() {
       num.textContent = info.wait;
       waitRow.appendChild(num);
 
-      const unit = document.createElement('span');
-      unit.className = 'wait-unit';
-      unit.textContent = 'min';
-      waitRow.appendChild(unit);
-
       // hs.trend is set once per poll (see updateWaitTrends()) — reading it
       // here, rather than comparing wait values on every render, is what
       // keeps the arrow showing across re-renders (toggling completion,
@@ -1208,7 +1208,14 @@ function updateWaitTrends() {
   for (const house of HOUSES) {
     const { info } = getHouseInfo(house);
     const hs = state.houseState[house.codeId];
-    if (typeof info.wait !== 'number') continue;
+    if (typeof info.wait !== 'number') {
+      // Closed/down/no-data clears the trend so a house doesn't show a stale
+      // arrow while shut, and reopening never compares against a wait time
+      // from before the closure.
+      hs.lastWait = null;
+      hs.trend = null;
+      continue;
+    }
     if (typeof hs.lastWait === 'number' && hs.lastWait !== info.wait) {
       hs.trend = info.wait > hs.lastWait ? 'up' : 'down';
     }
