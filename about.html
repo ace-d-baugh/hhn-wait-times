@@ -92,6 +92,17 @@
     <p>A house that hasn't opened yet for the night shows when it will — as either an early-access time or
       the general event start, whichever applies to that house — right on its card in place of "Closed."</p>
 
+    <div id="shows-section">
+      <h2>Shows</h2>
+      <p>Orlando's two nightly stage shows — <b>Stranger Things: Return to Hawkins</b> (lagoon show) and
+        <b>Nightmare Fuel: Blood Noir</b> (stage show) — have their own fixed showtimes each night. The
+        <b>Shows</b> page in the hamburger menu lists them out, with the next upcoming showtime highlighted
+        in red and already-passed ones grayed out.</p>
+      <p style="text-align:center; margin:18px 0 0;">
+        <a class="back" href="shows.html">View Show Times</a>
+      </p>
+    </div>
+
     <h2>Change parks</h2>
     <p>This tracker covers both <b>Universal Studios Florida</b> (Orlando) and <b>Universal Studios
       Hollywood</b>. You picked one when you first opened the tracker, and it's remembered on your
@@ -163,6 +174,9 @@
   document.getElementById('app-park-label').textContent = APP_LINKS[park].label;
   document.getElementById('app-apple').href = APP_LINKS[park].apple;
   document.getElementById('app-google').href = APP_LINKS[park].google;
+
+  // The show schedule only exists for Orlando so far.
+  document.getElementById('shows-section').hidden = park !== 'orlando';
 </script>
 </body>
 </html>
