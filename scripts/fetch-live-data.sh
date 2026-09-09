@@ -10,17 +10,14 @@
 # fetch per park per run regardless of visitor count.
 #
 # Setup:
-#   1. Edit SITE_DIR below to the directory that actually holds this site's
-#      index.html on this server (wherever your web server's docroot for
-#      digitalelegance.com/hhn points).
+#   1. Put this file on the server, e.g.
+#      /home/acieffe/web/digitalelegance.com/public_html/hhn/scripts/fetch-live-data.sh
 #   2. chmod +x fetch-live-data.sh
 #   3. Add the crontab line at the bottom of this file.
 
 set -euo pipefail
 
-# ── EDIT THIS ────────────────────────────────────────────────────────────
-SITE_DIR="/path/to/your/hhn/site"
-# ─────────────────────────────────────────────────────────────────────────
+SITE_DIR="/home/acieffe/web/digitalelegance.com/public_html/hhn"
 
 DATA_DIR="$SITE_DIR/data"
 mkdir -p "$DATA_DIR"
@@ -45,5 +42,5 @@ fetch_and_save() {
 fetch_and_save "$ORLANDO_URL" "$DATA_DIR/live-orlando.json"
 fetch_and_save "$HOLLYWOOD_URL" "$DATA_DIR/live-hollywood.json"
 
-# ── Crontab (run: crontab -e, then paste the line below with your real path) ──
-# * * * * * /path/to/fetch-live-data.sh >> /var/log/hhn-fetch.log 2>&1
+# ── Crontab (run: crontab -e, then paste the line below) ──────────────────
+# * * * * * /home/acieffe/web/digitalelegance.com/public_html/hhn/scripts/fetch-live-data.sh >> /home/acieffe/logs/hhn-fetch.log 2>&1
