@@ -42,6 +42,10 @@
 
   .back{ display:inline-block; margin-top:32px; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
   .back:hover{ border-color:var(--blood-bright); }
+  .project-card + .project-card{ margin-top:18px; }
+  .copyright{ margin-top:36px; color:var(--muted); font-size:11.5px; }
+  .copyright a{ color:var(--muted); }
+  .copyright a:hover{ color:var(--pumpkin); }
 </style>
 </head>
 <body>
@@ -62,7 +66,18 @@
       <span class="project-link">Visit MyShiftX.com &rarr;</span>
     </a>
 
+    <a class="project-card" href="https://digitalelegance.com/finecode" target="_blank" rel="noopener">
+      <p class="project-desc">More of my work, over at Digital Elegance.</p>
+      <span class="project-link">Visit digitalelegance.com/finecode &rarr;</span>
+    </a>
+
+    <a class="project-card" href="https://github.com/ace-d-baugh/" target="_blank" rel="noopener">
+      <p class="project-desc">Source code for this project and others.</p>
+      <span class="project-link">Visit my GitHub &rarr;</span>
+    </a>
+
     <a class="back" href="index.html">&larr; Back to wait times</a>
+    <p class="copyright">&copy; 2026 <a href="https://digitalelegance.com" target="_blank" rel="noopener">Digital Elegance LLC</a></p>
   </div>
 </body>
 </html>
