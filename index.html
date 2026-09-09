@@ -93,8 +93,14 @@
     header{ padding:0 76px; }
     h1{ font-size:clamp(22px, 6vw, 34px); letter-spacing:1px; }
     .subtitle{ font-size:clamp(10px, 2.6vw, 13px); letter-spacing:1.5px; }
+    /* The park-hours line sits well below the corner buttons by the time it
+       renders (h1 + the first subtitle line are already taller than the
+       buttons here), so it can safely borrow back the header's side padding
+       to fit the full "Park Name: H:MM AM - H:MM AM" on one line. */
+    #park-hours-line{ margin:0 -76px; padding:0 6px; }
     .hamburger-btn{ left:8px; top:8px; }
     .view-toggle{ right:8px; top:8px; padding:2px; }
+    .view-toggle-thumb{ left:2px; top:2px; width:26px; height:24px; }
     .view-toggle-btn{ width:26px; height:24px; }
     .view-toggle-btn svg{ width:15px; height:15px; }
   }
@@ -118,21 +124,30 @@
     background:rgba(255,255,255,.03); border:1px solid var(--card-border); border-radius:999px;
     padding:3px;
   }
+  /* Slides between the two buttons instead of an instant highlight swap —
+     its transition-duration is set from JS to match however long the card
+     fly-out/fly-in takes, so the pill and the grid always finish together. */
+  .view-toggle-thumb{
+    position:absolute; left:3px; top:3px;
+    width:30px; height:28px;
+    border-radius:999px;
+    background:rgba(255,42,58,.15);
+    box-shadow:0 0 8px rgba(255,42,58,.35);
+    transition:transform .3s ease;
+    pointer-events:none;
+  }
   .view-toggle-btn{
+    position:relative; z-index:1;
     width:30px; height:28px;
     display:flex; align-items:center; justify-content:center;
     background:none; border:none; border-radius:999px; cursor:pointer; padding:0;
     color:var(--muted);
-    transition:background .15s ease, color .15s ease;
+    transition:color .15s ease;
   }
   .view-toggle-btn svg{ width:17px; height:17px; }
   #view-btn-rides svg{ transform:scaleX(-1); }
   .view-toggle-btn:hover{ color:var(--bone); }
-  .view-toggle-btn.active{
-    color:var(--blood-bright);
-    background:rgba(255,42,58,.15);
-    box-shadow:0 0 8px rgba(255,42,58,.35);
-  }
+  .view-toggle-btn.active{ color:var(--blood-bright); }
   .view-toggle-btn.active:hover{ color:var(--blood-bright); }
 
   .status-bar{
@@ -417,6 +432,7 @@
   <header>
     <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu"><span></span><span></span><span></span></button>
     <div class="view-toggle" id="view-toggle" role="tablist" aria-label="Switch between houses and rides">
+      <div class="view-toggle-thumb" id="view-toggle-thumb"></div>
       <button type="button" class="view-toggle-btn active" id="view-btn-houses" data-view="houses" role="tab" aria-selected="true" aria-label="Houses">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 11 L12 3 L21 11"/>
@@ -1581,6 +1597,7 @@ function initPark(parkId) {
   HOUSES = park.houses;
   LIVE_URL = park.liveUrl;
   updateViewLabels();
+  resetPillThumb();
 
   state.entities = null;
   loadLiveCache(parkId);
@@ -1618,12 +1635,46 @@ function sideForView(view) {
   return view === 'rides' ? 'right' : 'left';
 }
 
+// Slides the pill's highlight to whichever button matches `view`, over
+// `durationMs` — called once at the very start of switchView with the full
+// card-animation duration, so the pill and the grid finish at the same time.
+function updatePillThumb(view, durationMs) {
+  const thumb = document.getElementById('view-toggle-thumb');
+  const housesBtn = document.getElementById('view-btn-houses');
+  const targetBtn = view === 'rides' ? document.getElementById('view-btn-rides') : housesBtn;
+  thumb.style.transitionDuration = durationMs + 'ms';
+  thumb.style.transform = 'translateX(' + (targetBtn.offsetLeft - housesBtn.offsetLeft) + 'px)';
+}
+
+// Snaps the pill straight back to "houses" with no animation — used when a
+// park (re)boots, since that's not a user-initiated toggle.
+function resetPillThumb() {
+  const thumb = document.getElementById('view-toggle-thumb');
+  thumb.style.transition = 'none';
+  thumb.style.transform = 'translateX(0)';
+  // eslint-disable-next-line no-unused-expressions
+  thumb.offsetHeight;
+  thumb.style.transition = '';
+}
+
 async function switchView(view) {
   if (view === currentView || state.isAnimating) return;
   state.isAnimating = true;
 
   const exitSide = sideForView(currentView);
   const enterSide = sideForView(view);
+
+  const newItems = view === 'rides' ? PARKS[currentParkId].rides : PARKS[currentParkId].houses;
+  const totalDuration = 500 + 450 + 40 + 450 + 1000 + newItems.length * 80;
+  updatePillThumb(view, totalDuration);
+
+  const subtitleEls = [document.getElementById('subtitle'), document.getElementById('park-hours-line')];
+  const textExitDuration = 950; // matches the card gather (500) + fling (450) below
+  subtitleEls.forEach(el => {
+    el.style.transition = 'transform ' + textExitDuration + 'ms ease, opacity ' + textExitDuration + 'ms ease';
+    el.style.transform = 'translateX(' + (exitSide === 'left' ? '-30vw' : '30vw') + ')';
+    el.style.opacity = '0';
+  });
 
   const gridRect = grid.getBoundingClientRect();
   const centerX = gridRect.width / 2;
@@ -1660,12 +1711,22 @@ async function switchView(view) {
   // rides share the one live feed from the regular 30s poll, so the new
   // view renders with data that's already there, no extra fetch needed.
   currentView = view;
-  HOUSES = view === 'rides' ? PARKS[currentParkId].rides : PARKS[currentParkId].houses;
+  HOUSES = newItems;
   updateViewLabels();
   resetState();
   loadState();
   if (state.entities) updateWaitTrends();
   buildSlotsAndCards();
+
+  // Stage the new header text off-screen on the entering side, ready to fly
+  // in alongside the incoming cards.
+  subtitleEls.forEach(el => {
+    el.style.transition = 'none';
+    el.style.transform = 'translateX(' + (enterSide === 'left' ? '-30vw' : '30vw') + ')';
+    el.style.opacity = '0';
+  });
+  // eslint-disable-next-line no-unused-expressions
+  subtitleEls[0].offsetHeight;
 
   const newOrder = (state.mode === 'custom' && state.customOrder)
     ? partitionCompleted(state.customOrder.slice())
@@ -1694,6 +1755,13 @@ async function switchView(view) {
 
   await wait(40);
 
+  // Fly the header text back in alongside the cards.
+  subtitleEls.forEach(el => {
+    el.style.transition = 'transform .45s ease, opacity .45s ease';
+    el.style.transform = 'translateX(0)';
+    el.style.opacity = '1';
+  });
+
   // Phase 4: fly the incoming stack in from off-screen to the same center
   // gather point — the mirror image of phase 2.
   newOrder.forEach(codeId => {
@@ -1720,6 +1788,11 @@ async function switchView(view) {
   Object.values(cardEls).forEach(card => {
     card.style.zIndex = '';
     card.style.transition = 'transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease';
+  });
+  subtitleEls.forEach(el => {
+    el.style.transition = '';
+    el.style.transform = '';
+    el.style.opacity = '';
   });
   state.isAnimating = false;
   saveState();
