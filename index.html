@@ -541,7 +541,7 @@
 </div>
 
 <script>
-const POLL_SECONDS = 30;
+const POLL_SECONDS = 60; // matches the cron job's refresh cadence — see scripts/fetch-live-data.sh
 const PARK_COOKIE = 'hhn_park';
 const COOKIE_DAYS = 365;
 const NO_WAIT_SENTINEL = 999;
@@ -559,7 +559,12 @@ const PARKS = {
   orlando: {
     label: 'Universal Studios Florida',
     timeZone: 'America/New_York',
-    liveUrl: 'https://api.themeparks.wiki/v1/entity/89db5d43-c434-4097-b71f-f6869f495a22/live',
+    // Same-origin static file, refreshed by a cron job on the server (see
+    // scripts/fetch-live-data.sh) rather than fetched from themeparks.wiki
+    // by every visitor's browser — themeparks.wiki's own guidance is to
+    // poll live data no more than once every 5 minutes, and that guidance
+    // has to be honored once per site, not once per visitor.
+    liveUrl: 'data/live-orlando.json',
     stateCookie: 'hhn_state',
     // Nightly HHN event window, 24h "HH:MM" — shown under the header and used
     // as the default "opens at" time for any house below that doesn't set
@@ -591,7 +596,7 @@ const PARKS = {
   hollywood: {
     label: 'Universal Studios Hollywood',
     timeZone: 'America/Los_Angeles',
-    liveUrl: 'https://api.themeparks.wiki/v1/entity/bc4005c5-8c7e-41d7-b349-cdddf1796427/live',
+    liveUrl: 'data/live-hollywood.json',
     stateCookie: 'hhn_state_hollywood',
     // Event runs 7:00 PM-2:00 AM; all houses open at 5:30 PM Early Access.
     hours: { open: '19:00', close: '02:00' },

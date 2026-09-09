@@ -1,0 +1,3 @@
+# Live data cache written by scripts/fetch-live-data.sh on the server —
+# not source, shouldn't be committed.
+/data/
