@@ -1418,7 +1418,11 @@ function updateWaitTrends() {
   }
 }
 
-async function poll() {
+// Fetches the live feed and updates state.entities + the status bar, but
+// does not touch trends, order, or rendering — shared by poll() and by
+// switchView(), which needs a fresh fetch without disturbing the view that's
+// mid-transition-out.
+async function fetchLiveData() {
   const dot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
   const errorBanner = document.getElementById('error-banner');
@@ -1428,8 +1432,27 @@ async function poll() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     state.entities = data.liveData || [];
-    updateWaitTrends();
+    dot.className = 'dot live';
+    statusText.textContent = 'Live';
+    errorBanner.style.display = 'none';
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+    return true;
+  } catch (err) {
+    dot.className = 'dot err';
+    statusText.textContent = 'Connection error';
+    errorBanner.style.display = 'block';
+    errorBanner.textContent =
+      'Could not reach the live wait time feed (' + err.message + '). ' +
+      'This can happen if your browser blocks the request, the API is briefly down, or you have no internet connection. Retrying automatically…';
+    return false;
+  }
+}
 
+async function poll() {
+  const ok = await fetchLiveData();
+
+  if (ok) {
+    updateWaitTrends();
     if (state.mode !== 'custom' && !state.isAnimating) {
       const newOrder = computeOrder(state.mode, state.direction);
       const changed = newOrder.some((id, i) => id !== state.order[i]);
@@ -1439,18 +1462,7 @@ async function poll() {
     } else {
       renderContent();
     }
-
-    dot.className = 'dot live';
-    statusText.textContent = 'Live';
-    errorBanner.style.display = 'none';
-    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
-  } catch (err) {
-    dot.className = 'dot err';
-    statusText.textContent = 'Connection error';
-    errorBanner.style.display = 'block';
-    errorBanner.textContent =
-      'Could not reach the live wait time feed (' + err.message + '). ' +
-      'This can happen if your browser blocks the request, the API is briefly down, or you have no internet connection. Retrying automatically…';
+  } else {
     renderContent();
   }
 
@@ -1507,15 +1519,32 @@ function initPark(parkId) {
 // back into the same slots, the gathered stack flies off-screen left, the
 // dataset swaps underneath, and the new view's cards fly in from the right
 // and disperse into place using whatever sort mode is currently selected.
-function switchView(view) {
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Houses live on the left of the pill, rides on the right — each view always
+// exits toward, and enters from, its own side, regardless of which
+// direction the switch is going.
+function sideForView(view) {
+  return view === 'rides' ? 'right' : 'left';
+}
+
+async function switchView(view) {
   if (view === currentView || state.isAnimating) return;
   state.isAnimating = true;
+
+  const exitSide = sideForView(currentView);
+  const enterSide = sideForView(view);
 
   const gridRect = grid.getBoundingClientRect();
   const centerX = gridRect.width / 2;
   const centerY = gridRect.height / 2;
-  const flingX = gridRect.width / 2 + 400;
+  const flingDist = gridRect.width / 2 + 400;
+  const offX = side => (side === 'left' ? -flingDist : flingDist);
 
+  // Phase 1: gather the outgoing cards into a single stack at center —
+  // identical to the sort-mode shuffle's gather move.
   const oldCards = Object.values(cardEls);
   oldCards.forEach((card, i) => {
     card.style.transition = 'transform .5s cubic-bezier(.3,.6,.3,1)';
@@ -1526,61 +1555,93 @@ function switchView(view) {
     card.style.transform = 'translate(' + (centerX - w / 2) + 'px,' + (centerY - h / 2) + 'px) rotate(' + rot + 'deg) scale(.92)';
   });
 
-  setTimeout(() => {
-    oldCards.forEach(card => {
-      card.style.transition = 'transform .45s cubic-bezier(.55,0,1,.45)';
-      card.style.transform = 'translate(' + (centerX - flingX) + 'px,' + centerY + 'px) rotate(-20deg) scale(.85)';
-    });
+  // Refresh live data in parallel with the exit animation, so the incoming
+  // view never renders with stale wait times.
+  const fetchPromise = fetchLiveData();
 
-    setTimeout(() => {
-      currentView = view;
-      HOUSES = view === 'rides' ? PARKS[currentParkId].rides : PARKS[currentParkId].houses;
-      updateViewLabels();
-      resetState();
-      loadState();
-      buildSlotsAndCards();
+  await wait(500);
 
-      const newOrder = (state.mode === 'custom' && state.customOrder)
-        ? partitionCompleted(state.customOrder.slice())
-        : computeOrder(state.mode, state.direction);
-      state.order = newOrder;
-      document.getElementById('dir-toggle').disabled = state.mode === 'custom';
-      document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
-      grid.classList.toggle('custom-mode', state.mode === 'custom');
-      updateSortDropdownLabel();
+  // Phase 2: fling the whole gathered stack off toward the outgoing view's
+  // home side, as one clump (no per-card stagger).
+  oldCards.forEach(card => {
+    card.style.transition = 'transform .45s cubic-bezier(.55,0,1,.45)';
+    card.style.transform = 'translate(' + (centerX + offX(exitSide)) + 'px,' + centerY + 'px) rotate(' + (exitSide === 'left' ? -20 : 20) + 'deg) scale(.85)';
+  });
 
-      const rects = getSlotRects();
-      newOrder.forEach((codeId, idx) => {
-        const card = cardEls[codeId];
-        const r = rects[idx];
-        card.style.width = (r.w - SLOT_INSET * 2) + 'px';
-        card.style.height = (r.h - SLOT_INSET * 2) + 'px';
-        card.style.transition = 'none';
-        card.style.zIndex = String(idx);
-        card.style.transform = 'translate(' + (r.x + flingX) + 'px,' + (r.y + SLOT_INSET) + 'px) rotate(20deg) scale(.85)';
-        // eslint-disable-next-line no-unused-expressions
-        card.offsetHeight;
-      });
-      renderContent();
+  await Promise.all([wait(450), fetchPromise]);
 
-      setTimeout(() => {
-        newOrder.forEach((codeId, idx) => {
-          const card = cardEls[codeId];
-          card.style.transition = 'transform 1s cubic-bezier(.2,.7,.2,1) ' + (idx * 80) + 'ms';
-        });
-        positionCards(newOrder, {});
+  // Phase 3: swap the dataset + cookie for the new view and rebuild the
+  // grid, staging every new card at the exact same off-screen stack point
+  // on its entering side.
+  currentView = view;
+  HOUSES = view === 'rides' ? PARKS[currentParkId].rides : PARKS[currentParkId].houses;
+  updateViewLabels();
+  resetState();
+  loadState();
+  updateWaitTrends();
+  buildSlotsAndCards();
 
-        setTimeout(() => {
-          Object.values(cardEls).forEach(card => {
-            card.style.zIndex = '';
-            card.style.transition = 'transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease';
-          });
-          state.isAnimating = false;
-          saveState();
-        }, 1000 + newOrder.length * 80);
-      }, 40);
-    }, 450);
-  }, 500);
+  const newOrder = (state.mode === 'custom' && state.customOrder)
+    ? partitionCompleted(state.customOrder.slice())
+    : computeOrder(state.mode, state.direction);
+  state.order = newOrder;
+  document.getElementById('dir-toggle').disabled = state.mode === 'custom';
+  document.getElementById('dir-toggle').textContent = state.direction === 'asc' ? 'A→Z' : 'Z→A';
+  grid.classList.toggle('custom-mode', state.mode === 'custom');
+  updateSortDropdownLabel();
+
+  const rects = getSlotRects();
+  newOrder.forEach((codeId, idx) => {
+    const card = cardEls[codeId];
+    const r = rects[idx];
+    const w = r.w - SLOT_INSET * 2, h = r.h - SLOT_INSET * 2;
+    card.style.width = w + 'px';
+    card.style.height = h + 'px';
+    card.style.transition = 'none';
+    const rot = (idx % 2 === 0 ? 1 : -1) * (4 + idx);
+    card.style.zIndex = String(idx);
+    card.style.transform = 'translate(' + (centerX + offX(enterSide) - w / 2) + 'px,' + (centerY - h / 2) + 'px) rotate(' + rot + 'deg) scale(.92)';
+    // eslint-disable-next-line no-unused-expressions
+    card.offsetHeight;
+  });
+  renderContent();
+
+  await wait(40);
+
+  // Phase 4: fly the incoming stack in from off-screen to the same center
+  // gather point — the mirror image of phase 2.
+  newOrder.forEach(codeId => {
+    cardEls[codeId].style.transition = 'transform .45s cubic-bezier(0,.55,.45,1)';
+  });
+  newOrder.forEach((codeId, idx) => {
+    const card = cardEls[codeId];
+    const w = parseFloat(card.style.width), h = parseFloat(card.style.height);
+    const rot = (idx % 2 === 0 ? 1 : -1) * (4 + idx);
+    card.style.transform = 'translate(' + (centerX - w / 2) + 'px,' + (centerY - h / 2) + 'px) rotate(' + rot + 'deg) scale(.92)';
+  });
+
+  await wait(450);
+
+  // Phase 5: deal the stack out to each card's sorted position — the mirror
+  // of phase 1.
+  newOrder.forEach((codeId, idx) => {
+    cardEls[codeId].style.transition = 'transform 1s cubic-bezier(.2,.7,.2,1) ' + (idx * 80) + 'ms';
+  });
+  positionCards(newOrder, {});
+
+  await wait(1000 + newOrder.length * 80);
+
+  Object.values(cardEls).forEach(card => {
+    card.style.zIndex = '';
+    card.style.transition = 'transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease, border-color .15s ease';
+  });
+  state.isAnimating = false;
+  saveState();
+
+  // The data we just fetched should count as this cycle's refresh.
+  clearInterval(pollTimer);
+  startCountdown();
+  pollTimer = setInterval(poll, POLL_SECONDS * 1000);
 }
 
 document.getElementById('view-btn-houses').addEventListener('click', () => switchView('houses'));
