@@ -660,11 +660,21 @@ function formatTime12(h, m) {
 
 // Returns { label, time } instead of one string so the card can render the
 // label small and the time itself bigger, on its own line.
-function formatOpensNote(opensAtHHMM) {
+// Finds the next occurrence (as a Date) of a house's "HH:MM" opening time —
+// today if it hasn't passed yet, otherwise tomorrow. Shared by the opens-at
+// card text and by the wait-time sort's "soonest opening first" ordering.
+function nextOpenTime(opensAtHHMM) {
   const [h, m] = opensAtHHMM.split(':').map(Number);
   const now = new Date();
   const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
+  return next;
+}
+
+function formatOpensNote(opensAtHHMM) {
+  const next = nextOpenTime(opensAtHHMM);
+  const now = new Date();
+  const [h, m] = opensAtHHMM.split(':').map(Number);
 
   const time = formatTime12(h, m);
   if (next.toDateString() === now.toDateString()) {
@@ -782,13 +792,19 @@ function computeOrder(mode, direction) {
     if (direction === 'desc') rows.reverse();
     ids = rows.map(r => r.house.codeId);
   } else {
-    // wait mode: houses with a numeric wait sort by that wait; everything else
-    // (open/closed/down/no-data) is pushed to the end, alphabetically.
+    // wait mode: houses with a numeric wait (i.e. currently open) sort by
+    // that wait and stay at the top; everything else (not yet open, closed,
+    // down, no-data) is pushed to the end, soonest-to-open first.
+    const parkHours = PARKS[currentParkId].hours;
     const numeric = rows.filter(r => typeof r.info.wait === 'number');
     const other = rows.filter(r => typeof r.info.wait !== 'number');
     numeric.sort((a, b) => a.info.wait - b.info.wait);
     if (direction === 'desc') numeric.reverse();
-    other.sort((a, b) => a.house.name.localeCompare(b.house.name));
+    other.sort((a, b) => {
+      const aOpen = nextOpenTime(a.house.opensAt || parkHours.open);
+      const bOpen = nextOpenTime(b.house.opensAt || parkHours.open);
+      return aOpen - bOpen;
+    });
     ids = [...numeric, ...other].map(r => r.house.codeId);
   }
   return partitionCompleted(ids);
