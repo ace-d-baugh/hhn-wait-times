@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
-# Fetches live wait-time data from themeparks.wiki ONCE per park and writes
-# it to a static JSON file that the site's own visitors read from, instead
-# of every visitor's browser hitting themeparks.wiki directly.
+# Fetches live wait-time data from themeparks.wiki and writes it to a static
+# JSON file that the site's own visitors read from, instead of every
+# visitor's browser hitting themeparks.wiki directly.
 #
 # Run this on a schedule (cron) — see the crontab line at the bottom of this
-# file. themeparks.wiki's own guidance is to poll live data no more than
-# once every 5 minutes; every 60 seconds here is already well inside that,
-# and it stays flat no matter how much site traffic grows, since it's one
-# fetch per park per run regardless of visitor count.
+# file. Since it's a single shared fetcher rather than every visitor's
+# browser polling themeparks.wiki, the request volume stays flat no matter
+# how much site traffic grows — one fetch per park per run regardless of
+# visitor count. That means it's fine, and preferable, to poll faster than
+# themeparks.wiki's stated "no more than once every 5 minutes" guidance in
+# exchange for fresher data for visitors: this script polls every 30
+# seconds, matching the 30-second refresh clients use to read the cached
+# data. cron itself only grants 1-minute granularity, so the crontab line
+# below fires once per minute and this script fetches twice internally
+# (once immediately, once after a 30-second sleep) to hit that cadence.
 #
 # Setup:
 #   1. Put this file on the server, e.g.
@@ -44,6 +50,14 @@ fetch_and_save() {
     rm -f "$tmpfile"
   fi
 }
+
+# cron only grants 1-minute granularity, so fetch twice per invocation
+# (immediately, then again after a 30-second sleep) to get a 30-second
+# cadence out of a once-per-minute crontab entry.
+fetch_and_save "$ORLANDO_URL" "$DATA_DIR/live-orlando.json"
+fetch_and_save "$HOLLYWOOD_URL" "$DATA_DIR/live-hollywood.json"
+
+sleep 30
 
 fetch_and_save "$ORLANDO_URL" "$DATA_DIR/live-orlando.json"
 fetch_and_save "$HOLLYWOOD_URL" "$DATA_DIR/live-hollywood.json"
