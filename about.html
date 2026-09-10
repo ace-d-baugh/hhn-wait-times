@@ -39,8 +39,19 @@
   .back-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:36px; }
   .back{ display:inline-block; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
   .back:hover{ border-color:var(--blood-bright); }
-  .kofi-slot{ display:flex; justify-content:center; margin-top:32px; }
+  .kofi-slot{ display:flex; justify-content:center; }
   .footer-note{ text-align:center; margin-top:8px; }
+
+  /* Shared two-line share/donate block — same markup and classes on
+     index.html, about.html, and projects.html. */
+  .support-block{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:32px; }
+  .support-line{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:0; color:var(--muted); font-size:14px; }
+  .link-btn{
+    background:none; border:1px solid var(--card-border); color:var(--pumpkin);
+    padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
+    text-decoration:none; display:inline-block;
+  }
+  .link-btn:hover{ border-color:var(--blood-bright); color:var(--blood-bright); }
   .app-badges{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:14px; }
   .app-badge{
     display:flex; align-items:center; gap:10px;
@@ -148,10 +159,15 @@
     This is an independent fan project, not affiliated with or endorsed by Universal Parks &amp; Resorts.</p>
 
     <div class="footer-note">
-      <p class="muted">If you like this:</p>
-      <div class="kofi-slot">
-        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-        <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+      <div class="support-block">
+        <p class="support-line">If you like this service: <a class="link-btn" href="index.html?share=1">Share it!</a></p>
+        <p class="support-line">
+          If you love it:
+          <span class="kofi-slot">
+            <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+            <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+          </span>
+        </p>
       </div>
 
       <p class="muted" style="margin-top:28px;">Get the official <span id="app-park-label">Universal Orlando Resort</span> app:</p>

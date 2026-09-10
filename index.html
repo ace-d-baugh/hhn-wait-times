@@ -351,9 +351,19 @@
   footer a{ color:var(--pumpkin); }
 
   .kofi-slot{ display:flex; justify-content:center; }
-  .kofi-slot.footer-kofi{ margin-top:8px; }
   .kofi-slot.menu-kofi{ margin-top:6px; padding:0 10px; }
   .copyright{ margin-top:8px; }
+
+  /* Shared two-line share/donate block — same markup and classes on
+     index.html, about.html, and projects.html. */
+  .support-block{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:10px; }
+  .support-line{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:0; }
+  .link-btn{
+    background:none; border:1px solid var(--card-border); color:var(--pumpkin);
+    padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
+    text-decoration:none; display:inline-block;
+  }
+  .link-btn:hover{ border-color:var(--blood-bright); color:var(--blood-bright); }
 
   .legend{
     flex:0 0 auto;
@@ -492,10 +502,18 @@
 
   <footer>
     Unofficial fan dashboard · data via <a href="https://themeparks.wiki/" target="_blank" rel="noopener">themeparks.wiki</a> · not affiliated with Universal Parks &amp; Resorts · tap a house to mark it done
-    <div class="kofi-slot footer-kofi">
-      <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-      <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+
+    <div class="support-block">
+      <p class="support-line">If you like this service: <button type="button" class="link-btn" id="footer-share-btn">Share it!</button></p>
+      <p class="support-line">
+        If you love it:
+        <span class="kofi-slot">
+          <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+          <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+        </span>
+      </p>
     </div>
+
     <p class="copyright">&copy; 2026 <a href="https://digitalelegance.com" target="_blank" rel="noopener">Digital Elegance LLC</a></p>
   </footer>
 </div>
@@ -537,6 +555,7 @@
     <h3>Scan for live wait times</h3>
     <img class="qr-image" src="qr-code.png" alt="QR code linking to this page">
     <p class="share-link"><a id="share-link" href="#" target="_blank" rel="noopener"></a></p>
+    <button type="button" class="link-btn" id="share-native-btn" style="margin-top:14px;" hidden>Share&hellip;</button>
   </div>
 </div>
 
@@ -1434,12 +1453,24 @@ function showShare() {
   const link = document.getElementById('share-link');
   link.textContent = SHARE_URL;
   link.href = SHARE_URL;
+
+  const nativeBtn = document.getElementById('share-native-btn');
+  if (navigator.share) {
+    nativeBtn.hidden = false;
+    nativeBtn.onclick = () => {
+      navigator.share({ title: 'HHN Wait Tracker', url: SHARE_URL }).catch(() => {});
+    };
+  } else {
+    nativeBtn.hidden = true;
+  }
+
   document.getElementById('share-overlay').hidden = false;
 }
 document.getElementById('menu-share-btn').addEventListener('click', () => {
   document.getElementById('menu-overlay').hidden = true;
   showShare();
 });
+document.getElementById('footer-share-btn').addEventListener('click', showShare);
 document.getElementById('share-close').addEventListener('click', () => {
   document.getElementById('share-overlay').hidden = true;
 });
@@ -1832,6 +1863,13 @@ if (bootParkId === 'orlando' || bootParkId === 'hollywood') {
 }
 
 if (new URLSearchParams(location.search).has('changePark')) {
+  history.replaceState(null, '', location.pathname);
+}
+
+// A link (e.g. the shared support section on About/More Projects) can send
+// visitors here with ?share=1 to jump straight to the share modal.
+if (new URLSearchParams(location.search).has('share')) {
+  showShare();
   history.replaceState(null, '', location.pathname);
 }
 </script>
