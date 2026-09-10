@@ -21,6 +21,11 @@ SITE_DIR="/home/acieffe/web/digitalelegance.com/public_html/hhn"
 
 DATA_DIR="$SITE_DIR/data"
 mkdir -p "$DATA_DIR"
+# cron often runs with a stricter umask than an interactive shell, which can
+# leave this directory and the JSON files unreadable by the web server user
+# (403s for visitors even though the files exist) — force sane permissions
+# on every run instead of depending on whatever umask cron happens to use.
+chmod 755 "$DATA_DIR"
 
 ORLANDO_URL="https://api.themeparks.wiki/v1/entity/89db5d43-c434-4097-b71f-f6869f495a22/live"
 HOLLYWOOD_URL="https://api.themeparks.wiki/v1/entity/bc4005c5-8c7e-41d7-b349-cdddf1796427/live"
@@ -32,6 +37,7 @@ fetch_and_save() {
   local url="$1" outfile="$2" tmpfile
   tmpfile="$(mktemp "${outfile}.XXXXXX")"
   if curl -fsS --max-time 15 "$url" -o "$tmpfile"; then
+    chmod 644 "$tmpfile"
     mv -f "$tmpfile" "$outfile"
   else
     echo "$(date -u +%FT%TZ) fetch failed for $url" >&2
