@@ -49,9 +49,21 @@
   .back-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:44px; }
   .back{ display:inline-block; color:var(--pumpkin); text-decoration:none; border:1px solid var(--card-border); padding:8px 18px; border-radius:8px; }
   .back:hover{ border-color:var(--blood-bright); }
-  .copyright{ margin-top:28px; color:var(--muted); font-size:11.5px; }
+  .copyright{ margin-top:8px; color:var(--muted); font-size:11.5px; }
   .copyright a{ color:var(--muted); }
   .copyright a:hover{ color:var(--pumpkin); }
+
+  /* Shared two-line share/donate block — same markup and classes on
+     index.html, about.html, projects.html, and shows.html. */
+  .support-block{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:36px; }
+  .support-line{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:0; color:var(--muted); font-size:14px; }
+  .link-btn{
+    background:none; border:1px solid var(--card-border); color:var(--pumpkin);
+    padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
+    text-decoration:none; display:inline-block;
+  }
+  .link-btn:hover{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .kofi-slot{ display:flex; justify-content:center; }
 </style>
 </head>
 <body>
@@ -75,6 +87,17 @@
     <div class="back-row">
       <a class="back" href="index.html">&larr; Back to wait times</a>
       <a class="back" href="about.html">About</a>
+    </div>
+
+    <div class="support-block">
+      <p class="support-line">If you like this service: <a class="link-btn" href="index.html?share=1">Share it!</a></p>
+      <p class="support-line">
+        If you love it:
+        <span class="kofi-slot">
+          <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+          <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+        </span>
+      </p>
     </div>
 
     <p class="copyright">&copy; 2026 <a href="https://digitalelegance.com" target="_blank" rel="noopener">Digital Elegance LLC</a></p>
