@@ -448,6 +448,13 @@
   .lvl-missing .wait-row{ font-size:clamp(11px, 2vh, 18px); }
   .lvl-missing .wait-num{ color:var(--muted); }
 
+  /* Completed houses always show the same checkmark size regardless of
+     level — without this, a completed house at lvl-low/med/high (no
+     font-size override of its own) would inherit the row's full-size
+     numeric-wait font-size and render a much larger check-mark than a
+     completed lvl-open/closed house. */
+  .completed .wait-row{ font-size:clamp(13px, 2.6vh, 22px); }
+
   /* The "Closed" rubber stamp — used alone (down mid-event) and stacked
      above the opens-at time below. Sized off the row's own font-size like
      everything else in it. */
