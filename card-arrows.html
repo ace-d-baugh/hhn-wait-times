@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Arrows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Pulled straight out of index.html's card/wait-row/trend-arrow rules —
+     same selectors, same variables, so tweaks made here can just be
+     copy-pasted back. The only things NOT copied over are the parts tied
+     to the live app: the absolute-position/drag system, the grid the
+     cards normally sit in, and the level-driven font-size clamps (each
+     card below just sets its own font-size directly instead). */
+  :root{
+    --ground:#16130f;
+    --page:#0e0c09;
+    --panel:#201a14;
+    --panel-2:#2a2219;
+    --line:#3a2f23;
+    --ink:#ece4d6;
+    --muted:#948a7a;
+    --hazard:#f5a623;
+    --low:#5fb87a;
+    --high:#c1382b;
+    --blood:#7a1f1f;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    min-height:100%; margin:0; padding:0;
+    background:var(--page);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', 'Segoe UI', sans-serif;
+  }
+
+  .page{ padding:40px 24px; }
+  h1{
+    margin:0 0 24px;
+    font-size:15px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--muted);
+    text-align:center;
+  }
+
+  /* Just a row layout for this demo file — the real site positions cards
+     absolutely inside a JS-managed grid, which isn't needed here. */
+  .row{
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  /* ── Copied from index.html ────────────────────────────────────────── */
+
+  .card{
+    position:relative;
+    width:220px;
+    height:170px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:3px solid var(--line);
+    border-radius:6px;
+    display:flex; flex-direction:column;
+    padding:6px 6px 5px;
+    overflow:hidden;
+    text-align:center;
+  }
+  .card.lvl-low{ border-top-color:var(--low); }
+  .card.lvl-med{ border-top-color:var(--hazard); }
+  .card.lvl-high{ border-top-color:var(--high); }
+
+  .house-name{
+    flex:0 0 auto;
+    width:100%;
+    min-height:2.4em;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    letter-spacing:.01em;
+    color:var(--ink);
+    line-height:1.2;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    -webkit-box-pack:center;
+    justify-content:center;
+    overflow:hidden;
+    text-align:center;
+  }
+
+  .wait-row{
+    flex:1 1 auto; width:100%;
+    display:grid; grid-template-columns:1fr auto 1fr;
+    align-content:center;
+    line-height: 0.9;
+    font-size: 72px;
+  }
+  .wait-row .wait-num{ grid-column:2; justify-self:center; }
+  .wait-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:1em;
+    line-height: 0.9;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 1px 3px rgba(0,0,0,.8);
+  }
+  .trend-cluster{ grid-column:3; justify-self:start; align-self:stretch; display:flex; gap:3px; margin-left:4px; }
+  .trend-arrow{ width:.4em; height:.4em; flex:0 0 auto; filter:drop-shadow(0 1px 2px rgba(0,0,0,.8)); }
+  .trend-arrow.up{ background:var(--high); clip-path:polygon(50% 0%, 0% 100%, 100% 100%); align-self:flex-start; }
+  .trend-arrow.down{ background:var(--low); clip-path:polygon(50% 100%, 0% 0%, 100% 0%); align-self:flex-end; }
+
+  .lvl-low .wait-num{ color:var(--low); }
+  .lvl-med .wait-num{ color:var(--hazard); }
+  .lvl-high .wait-num{ color:var(--high); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Card / Arrow Playground</h1>
+  <div class="row">
+
+    <div class="card lvl-low">
+      <div class="house-name">Sinners</div>
+      <div class="wait-row">
+        <span class="wait-num">25</span>
+        <span class="trend-cluster">
+          <span class="trend-arrow down"></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="card lvl-med">
+      <div class="house-name">Hellraiser</div>
+      <div class="wait-row">
+        <span class="wait-num">50</span>
+        <!-- Both arrows at once never happens on the real site (a wait is
+             either trending up or down, never both) — shown together here
+             purely to compare their spacing/alignment side by side. -->
+        <span class="trend-cluster">
+          <span class="trend-arrow up"></span>
+          <span class="trend-arrow down"></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="card lvl-high">
+      <div class="house-name">Stranger Things 5</div>
+      <div class="wait-row">
+        <span class="wait-num">100</span>
+        <span class="trend-cluster">
+          <span class="trend-arrow up"></span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

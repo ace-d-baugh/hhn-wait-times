@@ -20,7 +20,7 @@
   :root{ --bg-0:#050304; --blood-bright:#ff2a3a; --pumpkin:#ff7518; --bone:#e8dcc8; --muted:#7a6d68; --card-bg:#140a0c; --card-border:#3a1015; }
   *{ box-sizing:border-box; }
   html,body{ min-height:100%; margin:0; background:var(--bg-0); color:var(--bone); font-family:'Oswald','Segoe UI',sans-serif; }
-  .wrap{ max-width:640px; margin:0 auto; padding:8vh 20px 6vh; text-align:center; }
+  .wrap{ max-width:640px; margin:0 auto; padding:54px 20px 6vh; text-align:center; }
   h1{ font-family:'Nosifer',cursive; font-size:clamp(24px,5vw,40px); color:var(--blood-bright); text-shadow:0 0 12px rgba(255,42,58,.5); margin:0 0 8px; }
   .tagline{ color:var(--muted); font-size:14px; letter-spacing:.5px; margin:0 0 40px; }
 
@@ -51,6 +51,19 @@
      index.html, about.html, and projects.html. */
   .support-block{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:36px; }
   .support-line{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:0; color:var(--muted); font-size:14px; }
+
+  /* Tighter than .support-block's own gap — the progress bar reads as a
+     caption on the donate button right above it, not a separate line.
+     Ko-fi's widget script also inserts an empty trailing <p></p> next to
+     the button it draws; hiding it removes the browser's default
+     paragraph margins that would otherwise widen this gap unpredictably. */
+  .donate-group{ display:flex; flex-direction:column; align-items:center; gap:0; }
+  .donate-group p:empty{ display:none; }
+  .donation-progress{ width:100%; max-width:240px; margin-top:4px; }
+  .donation-progress-track{ background:var(--card-border); border-radius:8px; height:7px; overflow:hidden; }
+  .donation-progress-fill{ background:var(--pumpkin); height:100%; border-radius:8px; }
+  .donation-progress-label{ margin:6px 0 0; font-size:11.5px; color:var(--muted); text-align:center; }
+  .donation-progress-label strong{ color:var(--bone); }
   .link-btn{
     background:none; border:1px solid var(--card-border); color:var(--pumpkin);
     padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
@@ -58,9 +71,54 @@
   }
   .link-btn:hover{ border-color:var(--blood-bright); color:var(--blood-bright); }
   .kofi-slot{ display:flex; justify-content:center; }
+
+  /* Fixed to the viewport rather than the header, so it can never widen
+     the header and throw off the title's centering. */
+  .hamburger-btn{
+    position:fixed; left:16px; top:16px; z-index:10;
+    width:34px; height:34px;
+    background:rgba(255,255,255,.03); border:1px solid var(--card-border); border-radius:8px;
+    cursor:pointer; padding:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  }
+  .hamburger-btn span{ display:block; width:18px; height:2px; background:var(--bone); border-radius:1px; }
+  .hamburger-btn:hover{ border-color:var(--blood-bright); }
+
+  .modal-overlay{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:stretch; justify-content:flex-start;
+    background:rgba(5,3,4,.75);
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .menu-panel{
+    position:relative;
+    width:min(280px, 80vw); height:100%;
+    background:var(--card-bg); border-right:1px solid var(--card-border);
+    padding:60px 20px 20px; box-sizing:border-box;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    animation:slideIn .2s ease;
+  }
+  @keyframes slideIn{ from{ transform:translateX(-100%); } to{ transform:translateX(0); } }
+  .menu-panel a, .menu-panel button.menu-link{
+    display:block; width:100%; box-sizing:border-box; text-align:center;
+    background:none; border:none; color:var(--bone);
+    font-family:'Oswald','Segoe UI',sans-serif; font-size:15.5px; font-weight:500; letter-spacing:.01em;
+    padding:12px 10px; border-radius:8px; cursor:pointer; text-decoration:none;
+  }
+  .menu-panel a:hover, .menu-panel button.menu-link:hover{ background:rgba(255,42,58,.1); color:var(--blood-bright); }
+  .modal-close{
+    position:absolute; top:14px; right:14px;
+    width:30px; height:30px; border-radius:8px;
+    background:none; border:1px solid var(--card-border); color:var(--bone);
+    font-size:18px; line-height:1; cursor:pointer;
+  }
+  .menu-donate{ display:flex; flex-direction:column; align-items:center; gap:0; width:100%; margin-top:6px; padding:0 10px; box-sizing:border-box; }
+  .menu-donate p:empty{ display:none; }
+  .menu-donate-line{ color:var(--muted); font-size:13px; margin:0 0 6px; }
 </style>
 </head>
 <body>
+  <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu"><span></span><span></span><span></span></button>
   <div class="wrap">
     <h1>More Projects</h1>
     <p class="tagline">Other things I've built</p>
@@ -92,16 +150,80 @@
 
     <div class="support-block">
       <p class="support-line">If you like this service: <a class="link-btn" href="index.html?share=1">Share it!</a></p>
-      <p class="support-line">
-        If you love it:
-        <span class="kofi-slot">
-          <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-          <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
-        </span>
-      </p>
+      <div class="donate-group">
+        <p class="support-line">
+          If you love it:
+          <span class="kofi-slot">
+            <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+            <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+          </span>
+        </p>
+        <div class="donation-progress" aria-label="Season donation goal progress">
+          <div class="donation-progress-track"><div class="donation-progress-fill" style="width:10%"></div></div>
+          <p class="donation-progress-label"><strong>$45.14</strong> raised of <strong>$450</strong> season goal</p>
+        </div>
+      </div>
     </div>
 
     <p class="copyright">&copy; 2026 <a href="https://digitalelegance.com" target="_blank" rel="noopener">Digital Elegance LLC</a></p>
   </div>
+
+  <div class="modal-overlay" id="menu-overlay" hidden>
+    <nav class="menu-panel">
+      <button class="modal-close" id="menu-close" aria-label="Close menu">&times;</button>
+      <a href="index.html">Wait Times</a>
+      <a href="shows.html">Shows</a>
+      <a href="about.html">About</a>
+      <a class="menu-link" href="index.html?share=1">Share</a>
+      <a class="menu-link" href="index.html?changePark=1">Change Park</a>
+      <div class="menu-donate">
+        <p class="menu-donate-line">If you love it:</p>
+        <span class="kofi-slot">
+          <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+          <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+        </span>
+        <div class="donation-progress" aria-label="Season donation goal progress">
+          <div class="donation-progress-track"><div class="donation-progress-fill" style="width:10%"></div></div>
+          <p class="donation-progress-label"><strong>$45.14</strong> raised of <strong>$450</strong> season goal</p>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+<script>
+  document.getElementById('hamburger-btn').addEventListener('click', () => {
+    document.getElementById('menu-overlay').hidden = false;
+  });
+  document.getElementById('menu-close').addEventListener('click', () => {
+    document.getElementById('menu-overlay').hidden = true;
+  });
+  document.getElementById('menu-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'menu-overlay') e.currentTarget.hidden = true;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.getElementById('menu-overlay').hidden = true;
+  });
+</script>
+<script>
+// Progressive enhancement over the static "$45.14 of $450" markup already
+// in the HTML above: if this fetch succeeds it overwrites those numbers
+// with the live total from scripts/kofi-webhook.js; if it fails (file not
+// deployed yet, offline, etc.) the static fallback just stays put.
+(function(){
+  fetch('data/donation-total.json', { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || typeof d.raised !== 'number' || typeof d.goal !== 'number') return;
+      var pct = Math.max(0, Math.min(100, (d.raised / d.goal) * 100));
+      document.querySelectorAll('.donation-progress').forEach(function(el){
+        var fill = el.querySelector('.donation-progress-fill');
+        var label = el.querySelector('.donation-progress-label');
+        if (fill) fill.style.width = pct.toFixed(1) + '%';
+        if (label) label.innerHTML = '<strong>$' + d.raised.toFixed(2) + '</strong> raised of <strong>$' + d.goal + '</strong> season goal';
+      });
+    })
+    .catch(function(){});
+})();
+</script>
 </body>
 </html>

@@ -12,48 +12,51 @@
 
   gtag('config', 'G-ZDTV4XZ1N3');
 </script>
-<title>HHN Wait Times at a Glance | Halloween Horror Nights Tracker</title>
-<meta name="description" content="See every Halloween Horror Nights house wait time on one screen. Free, no login, updates every 30 seconds.">
-<link rel="canonical" href="https://digitalelegance.com/hhn">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="HHN Wait Times at a Glance">
-<meta property="og:description" content="Every HHN house wait on one screen. Free, no login, updates every 30 seconds.">
-<meta property="og:url" content="https://digitalelegance.com/hhn">
-<meta property="og:image" content="https://digitalelegance.com/hhn/og-image.png">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="HHN Wait Times at a Glance">
-<meta name="twitter:description" content="Every HHN house wait on one screen. Free, no login, updates every 30 seconds.">
-<meta name="twitter:image" content="https://digitalelegance.com/hhn/og-image.png">
+<title>HHN Wait Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Staatliches&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Crew-signage palette — a queue-board bolted up backstage at a haunt,
-     not a spooky-template neon look. See hhn-wait-board-mockup for the
-     design rationale. */
   :root{
-    --ground:#16130f;
-    --page:#0e0c09;
-    --panel:#201a14;
-    --panel-2:#2a2219;
-    --line:#3a2f23;
-    --ink:#ece4d6;
-    --muted:#948a7a;
-    --hazard:#f5a623;
-    --low:#5fb87a;
-    --high:#c1382b;
-    --blood:#7a1f1f;
+    --bg-0:#050304;
+    --bg-1:#0d0608;
+    --blood:#b30f1f;
+    --blood-bright:#ff2a3a;
+    --pumpkin:#ff7518;
+    --sick-green:#7ef542;
+    --bone:#e8dcc8;
+    --muted:#7a6d68;
+    --card-bg:#140a0c;
+    --card-border:#3a1015;
+    --shadow:rgba(179,15,31,.35);
   }
   *{ box-sizing:border-box; }
   html,body{
     min-height:100%; margin:0; padding:0;
-    background:var(--page);
-    color:var(--ink);
-    font-family:'IBM Plex Sans', 'Segoe UI', sans-serif;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(179,15,31,.25), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(179,15,31,.12), transparent 60%),
+      var(--bg-0);
+    color:var(--bone);
+    font-family:'Oswald', 'Segoe UI', sans-serif;
     overflow-x:hidden;
     overflow-y:auto;
+  }
+  /* drifting fog layer */
+  body::before{
+    content:"";
+    position:fixed; inset:-10%;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,.03), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,.025), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(255,255,255,.02), transparent 50%);
+    animation: drift 40s ease-in-out infinite alternate;
+    pointer-events:none;
+    z-index:0;
+  }
+  @keyframes drift{
+    0%{ transform: translate(-2%, -1%) scale(1); }
+    100%{ transform: translate(2%, 2%) scale(1.05); }
   }
 
   .wrap{
@@ -64,209 +67,153 @@
     gap:0.6vh;
   }
 
-  header{
-    position:relative;
-    flex:0 0 auto;
-    padding:10px 12px 4px;
-    display:grid;
-    /* Equal fixed side columns so the title sits dead-center on the page —
-       the view-toggle went vertical specifically so it could match the
-       hamburger's width instead of needing more room than it. */
-    grid-template-columns:32px 1fr 32px;
-    align-items:center;
-    gap:8px;
-  }
-  .mark-col{ min-width:0; text-align:center; }
-  /* Title/subtitle/park-hours keep the original glowing-blood treatment —
-     the one place on the page a little neon is the point, since it's the
-     brand mark rather than data the eye has to resolve fast. */
+  header{ position:relative; text-align:center; flex:0 0 auto; padding:0 92px; }
   h1{
     font-family:'Nosifer', 'Creepster', cursive;
     font-size:clamp(10px, 1.4vh, 16px);
     letter-spacing:1.5px;
     margin:0;
-    color:var(--high);
+    color:var(--blood-bright);
     text-shadow:
-      0 0 6px rgba(193,56,43,.7),
-      0 0 16px rgba(193,56,43,.35),
+      0 0 6px rgba(255,42,58,.7),
+      0 0 16px rgba(255,42,58,.35),
       1px 1px 0 #000;
     line-height:1.15;
   }
-  /* Both sit outside the header's 3-column grid so they can span and
-     center across the full viewport width, instead of being squeezed
-     into the narrow middle column between the hamburger and view-toggle. */
   .subtitle{
     color:var(--muted);
     font-size:clamp(7px, 0.7vh, 9px);
     letter-spacing:2px;
     text-transform:uppercase;
-    text-align:center;
-    width:100%;
-    padding:0 12px;
   }
+  .subtitle + .subtitle{ margin-top:2px; }
   .subtitle:empty{ display:none; }
-  #park-hours-line{ color:var(--high); font-weight:700; padding-bottom:8px; }
+  #park-hours-line{ color:var(--blood-bright); font-weight:700; }
   @media (max-width:820px){
+    header{ padding:0 76px; }
     h1{ font-size:clamp(22px, 6vw, 34px); letter-spacing:1px; }
     .subtitle{ font-size:clamp(10px, 2.6vw, 13px); letter-spacing:1.5px; }
+    /* The park-hours line sits well below the corner buttons by the time it
+       renders (h1 + the first subtitle line are already taller than the
+       buttons here), so it can safely borrow back the header's side padding
+       to fit the full "Park Name: H:MM AM - H:MM AM" on one line. */
+    #park-hours-line{ margin:0 -76px; padding:0 6px; }
+    .hamburger-btn{ left:8px; top:8px; }
+    .view-toggle{ right:8px; top:8px; padding:2px; }
+    .view-toggle-thumb{ left:2px; top:2px; width:26px; height:24px; }
+    .view-toggle-btn{ width:26px; height:24px; }
+    .view-toggle-btn svg{ width:15px; height:15px; }
   }
 
   .hamburger-btn{
-    width:32px; height:32px;
-    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    position:absolute; left:12px; top:12px;
+    width:34px; height:34px;
+    background:rgba(255,255,255,.03); border:1px solid var(--card-border); border-radius:8px;
     cursor:pointer; padding:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
   }
-  .hamburger-btn span{ display:block; width:16px; height:2px; background:var(--ink); border-radius:1px; }
-  .hamburger-btn:hover{ border-color:var(--hazard); }
+  .hamburger-btn span{ display:block; width:18px; height:2px; background:var(--bone); border-radius:1px; }
+  .hamburger-btn:hover{ border-color:var(--blood); }
 
-  /* Houses / Rides pill switch — stacked vertically so it's only as wide as
-     the hamburger button on the other side of the header, letting the
-     title's column sit exactly centered instead of skewed by a wider
-     horizontal pill. The pill-thumb slide logic only cares about offsets
-     between its two child buttons, so this just swaps X for Y. */
+  /* Houses / Rides pill switch — mirrors the hamburger button on the other
+     side of the header, same top/left(right) inset so both sit at equal
+     distance from their respective corners. */
   .view-toggle{
-    position:relative;
-    display:flex; flex-direction:column; align-items:stretch; gap:2px;
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    padding:2px;
-    /* This column stretches to fill the header's fixed 32px side column
-       (box-sizing:border-box, so that 32px already includes the border
-       and padding below) — the buttons and thumb are sized to the 26px
-       that leaves inside, not the 28px they'd want unconstrained, or
-       they overflow past the right/bottom edge of the pill. */
-    box-sizing:border-box;
+    position:absolute; right:12px; top:12px;
+    display:flex; gap:2px;
+    background:rgba(255,255,255,.03); border:1px solid var(--card-border); border-radius:999px;
+    padding:3px;
   }
+  /* Slides between the two buttons instead of an instant highlight swap —
+     its transition-duration is set from JS to match however long the card
+     fly-out/fly-in takes, so the pill and the grid always finish together. */
   .view-toggle-thumb{
-    position:absolute; left:2px; top:2px;
-    width:26px; height:26px;
-    border-radius:12px;
-    background:rgba(193,56,43,.22);
-    /* Quick and independent of whatever the card fly-animation takes —
-       this is a small local UI response, not tied to that longer move. */
-    transition:transform .2s ease;
+    position:absolute; left:3px; top:3px;
+    width:30px; height:28px;
+    border-radius:999px;
+    background:rgba(255,42,58,.15);
+    box-shadow:0 0 8px rgba(255,42,58,.35);
+    transition:transform .3s ease;
     pointer-events:none;
   }
   .view-toggle-btn{
     position:relative; z-index:1;
-    width:26px; height:26px;
+    width:30px; height:28px;
     display:flex; align-items:center; justify-content:center;
-    background:none; border:none; border-radius:12px; cursor:pointer; padding:0;
+    background:none; border:none; border-radius:999px; cursor:pointer; padding:0;
     color:var(--muted);
     transition:color .15s ease;
   }
-  .view-toggle-btn svg{ width:16px; height:16px; }
-  /* The ride glyph's artwork runs edge-to-edge in its viewBox where the
-     house glyph sits inset ~12%, so stacked at the same box size the ride
-     icon reads bigger/off-balance — scaled down a touch to match the
-     house icon's visual weight, on top of the existing mirror flip. */
-  #view-btn-rides svg{ transform:scale(.82) scaleX(-1); }
-  .view-toggle-btn:hover{ color:var(--ink); }
-  .view-toggle-btn.active{ color:var(--high); }
-  .view-toggle-btn.active:hover{ color:var(--high); }
+  .view-toggle-btn svg{ width:17px; height:17px; }
+  #view-btn-rides svg{ transform:scaleX(-1); }
+  .view-toggle-btn:hover{ color:var(--bone); }
+  .view-toggle-btn.active{ color:var(--blood-bright); }
+  .view-toggle-btn.active:hover{ color:var(--blood-bright); }
 
-  /* ── Utility strip: live status (left) · sort · direction · key (right) ── */
   .status-bar{
     flex:0 0 auto;
-    display:flex; flex-wrap:wrap; gap:6px 10px;
-    align-items:center; justify-content:space-between;
-    padding:2px 12px 8px;
-  }
-  .status-bar .live-status{
-    display:flex; align-items:center; gap:6px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px; letter-spacing:.04em; text-transform:uppercase;
+    display:flex; flex-wrap:wrap; gap:6px 16px;
+    align-items:center; justify-content:center;
+    font-size:clamp(10px, 1.5vh, 13px);
     color:var(--muted);
-    white-space:nowrap;
+    padding:0.8vh 14px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:8px;
   }
-  .status-bar .live-status b{ color:var(--ink); font-weight:600; }
-  .status-bar .status-controls{ display:flex; align-items:center; gap:6px; }
-  .dot{ width:7px; height:7px; border-radius:50%; display:inline-block; flex:0 0 auto; }
-  /* A slow breathe, not a hard blink — this screen gets used inside a venue
-     that already has its own strobes and sudden light changes, so nothing
-     here should read as a flash. */
-  .dot.live{ background:var(--low); box-shadow:0 0 4px var(--low); animation:breathe 3.6s ease-in-out infinite; }
-  .dot.err{ background:var(--high); box-shadow:0 0 4px var(--high); animation:none; }
-  @keyframes breathe{ 50%{ opacity:.55; } }
-  @media (prefers-reduced-motion:reduce){ .dot.live{ animation:none; } }
+  .status-bar b{ color:var(--bone); font-weight:600; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  .dot.live{ background:var(--sick-green); box-shadow:0 0 8px var(--sick-green); animation:pulse 1.6s infinite; }
+  .dot.err{ background:var(--blood-bright); box-shadow:0 0 8px var(--blood-bright); }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
 
   .btn{
-    background:var(--panel); border:1px solid var(--line); color:var(--ink);
-    padding:4px 10px; border-radius:999px; cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10px;
+    background:none; border:1px solid var(--card-border); color:var(--bone);
+    padding:4px 10px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
   }
-  .btn:hover{ border-color:var(--hazard); }
+  .btn:hover{ border-color:var(--blood); }
 
-  .sort-control{ display:flex; align-items:center; gap:6px; position:relative; }
-  .sort-control .sort-label{ display:none; }
+  .sort-control{ display:flex; align-items:center; gap:6px; }
+  .sort-control .sort-label{ color:var(--muted); }
 
   .dropdown{ position:relative; }
   .dropdown-btn{
-    display:flex; align-items:center; gap:5px;
-    background:var(--panel); border:1px solid var(--line); color:var(--ink);
-    padding:4px 10px; border-radius:999px; cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10px;
-    min-width:0; justify-content:space-between;
+    display:flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.02); border:1px solid var(--card-border); color:var(--bone);
+    padding:4px 10px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
+    min-width:110px; justify-content:space-between;
   }
-  .dropdown-btn:hover{ border-color:var(--hazard); }
-  .dropdown-btn .caret{ color:var(--muted); font-size:9px; }
-  /* One popover for both sort mode and direction — options list on top,
-     a divider, then the direction row, so there's a single trigger
-     instead of two separate controls in the row above. */
+  .dropdown-btn:hover{ border-color:var(--blood); }
+  .dropdown-btn .caret{ color:var(--muted); font-size:10px; }
   .dropdown-list{
-    position:absolute; top:calc(100% + 4px); left:50%; transform:translateX(-50%); z-index:40;
-    margin:0; padding:4px;
-    background:var(--panel); border:1px solid var(--line); border-radius:8px;
-    min-width:170px;
-    box-shadow:0 10px 24px rgba(0,0,0,.6);
+    position:absolute; top:calc(100% + 4px); left:0; z-index:40;
+    list-style:none; margin:0; padding:4px;
+    background:#0d0608; border:1px solid var(--card-border); border-radius:8px;
+    min-width:140px;
+    box-shadow:0 8px 24px rgba(0,0,0,.6);
   }
   .dropdown-list[hidden]{ display:none; }
-  .dropdown-list ul{ list-style:none; margin:0; padding:0; }
   .dropdown-list li{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:7px 10px; border-radius:5px; cursor:pointer; color:var(--ink); font-size:12.5px;
+    padding:6px 10px; border-radius:5px; cursor:pointer; color:var(--bone); font-size:13px;
     white-space:nowrap;
-    font-family:'IBM Plex Sans', sans-serif;
   }
-  .dropdown-list li:hover{ background:rgba(245,166,35,.1); }
-  .dropdown-list li .tick{ font-size:11px; color:var(--hazard); visibility:hidden; }
-  .dropdown-list li.selected{ color:var(--hazard); font-weight:600; }
-  .dropdown-list li.selected .tick{ visibility:visible; }
+  .dropdown-list li:hover{ background:rgba(255,42,58,.12); }
+  .dropdown-list li.selected{ color:var(--pumpkin); font-weight:600; }
 
-  .dropdown-divider{ height:1px; background:var(--line); margin:5px 2px; }
-  .dir-row{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:5px 10px 4px;
-    font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--muted);
-  }
-
-  .dir-toggle{ min-width:0; }
+  .dir-toggle{ min-width:56px; }
   .dir-toggle[disabled]{ opacity:.35; cursor:not-allowed; }
-  .dir-toggle[disabled]:hover{ border-color:var(--line); }
-
-  .key-btn{ font-weight:700; padding:4px 9px; }
+  .dir-toggle[disabled]:hover{ border-color:var(--card-border); }
 
   #error-banner{
     display:none;
     flex:0 0 auto;
-    background:rgba(122,31,31,.25);
+    background:rgba(179,15,31,.15);
     border:1px solid var(--blood);
     color:#ffb3ba;
     padding:0.8vh 16px;
-    margin:0 12px 6px;
     border-radius:8px;
     font-size:clamp(10px, 1.4vh, 13px);
     text-align:center;
-  }
-
-  /* Hazard-tape rule — the page's one flourish, standing in for the header
-     divider. */
-  .hazard-rule{
-    flex:0 0 auto;
-    height:6px;
-    margin:0 12px 10px;
-    border-radius:2px;
-    background:repeating-linear-gradient(-45deg, var(--hazard) 0 12px, #241d15 12px 24px);
-    opacity:.85;
   }
 
   .grid{
@@ -279,33 +226,30 @@
     gap:1.6vh 1vw;
   }
   @media (max-width:820px){
-    .grid{ grid-template-columns:repeat(2, 1fr); grid-template-rows:repeat(var(--rows-mobile, 5), minmax(96px, 150px)); gap:1vh 2.5vw; }
+    .grid{ grid-template-columns:repeat(2, 1fr); grid-template-rows:repeat(var(--rows-mobile, 5), minmax(80px, 118px)); gap:1vh 2.5vw; }
   }
 
   .slot{
-    border-radius:8px;
+    border-radius:12px;
     border:2px dashed transparent;
     transition:border-color .2s ease;
   }
   /* Dashed placeholder outlines live behind every card at all times, but only
      become visible while something is actually moving (dragging, or the
      gather/deal animation into Custom) — not just because Custom is selected. */
-  .grid.show-slots .slot{ border-color:rgba(236,228,214,.25); }
+  .grid.show-slots .slot{ border-color:rgba(232,220,200,.25); }
 
   .card{
     position:absolute;
     top:0; left:0;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-top:3px solid var(--line);
-    border-radius:6px;
-    /* Fixed-height name row + a flexible readout row beneath it, so the
-       number lands in the same spot on every card whether the name takes
-       one line or two — nothing to hunt for at a glance. */
-    display:flex; flex-direction:column;
-    padding:6px 6px 5px;
+    background:linear-gradient(160deg, var(--card-bg), #0a0506);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:1vh 1vw;
     overflow:hidden;
+    display:flex; flex-direction:column; align-items:center;
     text-align:center;
+    box-shadow:0 4px 18px rgba(0,0,0,.5);
     cursor:pointer;
     /* Allow a normal vertical swipe to scroll the page; only a long-press
        (which arm() escalates to touch-action:none) hands the gesture to
@@ -316,21 +260,16 @@
   }
   .card.dragging{
     transition:box-shadow .15s ease;
-    box-shadow:0 16px 40px rgba(0,0,0,.7), 0 0 0 2px var(--hazard);
+    box-shadow:0 16px 40px rgba(0,0,0,.7), 0 0 0 2px var(--blood-bright);
     z-index:30;
   }
-  .card.pressing{ box-shadow:0 0 0 2px var(--hazard), 0 8px 20px rgba(0,0,0,.6); }
+  .card.pressing{ box-shadow:0 0 0 2px var(--pumpkin), 0 8px 20px rgba(0,0,0,.6); }
   @media (max-width:820px){
     .card:hover{ transform:none; }
+    .card{ padding:0.6vh 1vw; }
   }
 
-  .card.lvl-low{ border-top-color:var(--low); }
-  .card.lvl-med{ border-top-color:var(--hazard); }
-  .card.lvl-high{ border-top-color:var(--high); }
-  .card.lvl-down{ border-top-color:var(--high); }
-  /* The single longest current wait gets the deep blood accent — set in
-     renderContent() only when sorted by wait, descending. */
-  .card.rank1{ border-top-color:var(--blood); box-shadow:0 0 0 1px var(--blood); }
+  .card.rank-1{ border-color:var(--blood-bright); box-shadow:0 0 0 1px var(--blood-bright), 0 0 30px var(--shadow); }
 
   .card.completed{ opacity:.55; }
   .card.completed .house-name{ color:var(--muted); }
@@ -338,19 +277,15 @@
   .house-name{
     flex:0 0 auto;
     width:100%;
-    /* Always reserves 2 lines' worth of height, whether the name needs one
-       line or two, and centers a shorter name within that reserved space —
-       so the wait time below always starts from the same vertical position
-       regardless of name length. */
+    /* Always reserves 2 lines' worth of height (line-height 1.2 x 2 lines),
+       whether the name needs one line or two, and centers a shorter name
+       within that reserved space — so the wait time below always starts
+       from the same vertical position regardless of name length. */
     min-height:2.4em;
-    font-family:'IBM Plex Sans', sans-serif;
-    font-size:clamp(11px, 1.9vh, 15px);
+    font-size:clamp(11px, 1.9vh, 17px);
     font-weight:600;
-    letter-spacing:.01em;
-    /* Full-contrast ink, not a muted caption tone — this is one of the two
-       things a glancing eye has to resolve fast in a dark, glare-lit queue
-       line. */
-    color:var(--ink);
+    letter-spacing:.3px;
+    color:var(--bone);
     line-height:1.2;
     display:-webkit-box;
     -webkit-line-clamp:2;
@@ -361,138 +296,50 @@
     text-align:center;
   }
 
-  /* The row IS the font-size context — the number, its trend arrow(s), the
-     check-mark, and the opens-at block are all direct children sized in em
-     off .wait-row's own font-size, so the trend arrow scales with the digit
-     instead of shrinking to an afterthought next to a big number, and every
-     level (numeric, open, closed, missing) just dials one font-size.
-
-     Centering: a 3-column grid (spacer / number / spacer+arrows), with the
-     two spacer columns both `1fr` — they're forced equal by the grid track
-     algorithm regardless of whether the right one actually has an arrow in
-     it, so the number in the middle column stays dead-center in the card
-     whether zero, one, or (for reference) two arrows are showing. Flex
-     centering the whole number+arrow group, which is what this used to do,
-     can't do that — the group's width changes with the arrow, and the
-     number shifts with it. */
-  .wait-row{
-    flex:1 1 auto; width:100%;
-    display:grid; grid-template-columns:1fr auto 1fr;
-    /* wait-row itself is flex-grown tall to fill the card, but its one
-       grid row must stay sized to its content (the number's own line
-       height) rather than stretching to fill that extra space — otherwise
-       the number (and the arrow cluster stretching to match it) inflate
-       to the row's full height, and the digit ends up sitting at the top
-       of a much taller box instead of where align-self below expects it.
-       align-content:center sizes the row to content, then centers that
-       track in the leftover space; items within it default to stretch,
-       which is now a no-op for the number and exactly what the arrow
-       cluster wants. */
-    align-content:center;
-    line-height:.9;
-    font-size:clamp(28px, 6.4vh, 72px);
-  }
-  .wait-row .wait-num, .wait-row .check-mark, .wait-row .stamp{ grid-column:2; justify-self:center; }
+  /* 3-column grid (spacer / content / spacer) keeps the middle column
+     (the wait number) visually centered in the row no matter whether the
+     trend arrow is present in the right column — the arrow rides beside
+     the number instead of shifting its center. */
+  .wait-row{ flex:1 1 auto; width:100%; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; }
+  .wait-row .wait-num, .wait-row .check-mark{ grid-column:2; justify-self:center; }
+  .wait-row .trend-arrow{ grid-column:3; justify-self:start; margin-left:2px; }
   .wait-num{
-    font-family:'IBM Plex Mono', monospace;
+    font-family:'Oswald', sans-serif;
     font-weight:700;
-    font-size:1em;
-    line-height:.9;
-    font-variant-numeric:tabular-nums;
-    /* A tight dark halo, not a glow — keeps the digit crisp against screen
-       glare or a sudden flash from the event around it. */
-    text-shadow:0 1px 3px rgba(0,0,0,.8);
+    font-size:clamp(24px, 6.4vh, 54px);
+    line-height:1;
   }
-  /* Holds the trend arrow(s) in the right spacer column, immediately after
-     the number. `align-self:stretch` makes this cluster exactly as tall
-     as the row (i.e. as the number, the tallest cell) — that's what lets
-     each arrow below pin to its own edge of the cluster and land on the
-     matching edge of the number, instead of just the row's center.
+  .trend-arrow{ font-size:clamp(24px, 4vh, 36px); line-height:1; }
+  .trend-arrow.up{ color:var(--blood-bright); }
+  .trend-arrow.down{ color:var(--sick-green); }
+  .check-mark{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(24px, 6.4vh, 54px); line-height:1; color:var(--sick-green); }
 
-     A real house only ever has one trend at a time (wait went up or down,
-     never both) — this wrapper existing as its own flex row is what lets
-     a second arrow sit beside the first, evenly gapped, if it's ever
-     shown for reference. */
-  .trend-cluster{ grid-column:3; justify-self:start; align-self:stretch; display:flex; gap:3px; margin-left:4px; }
-  /* Solid CSS triangles instead of ▲▼ glyphs — a text-character arrow
-     renders thin next to a bold monospace digit; a filled shape matches
-     the number's weight and stays crisp at any size. Sized close to the
-     number's own height (not a small accent glyph) — its tip still pins
-     to the exact top/bottom of the digit via align-self below, the
-     height just controls how tall/bold the triangle reads. */
-  .trend-arrow{ width:.4em; height:.4em; flex:0 0 auto; filter:drop-shadow(0 1px 2px rgba(0,0,0,.8)); }
-  /* Pinned to the cluster's own top/bottom — since the cluster is
-     stretched to the number's full height, that's the number's top and
-     bottom too: the increase arrow's top matches the digit's top, the
-     decrease arrow's bottom matches the digit's bottom. */
-  .trend-arrow.up{ background:var(--high); clip-path:polygon(50% 0%, 0% 100%, 100% 100%); align-self:flex-start; }
-  .trend-arrow.down{ background:var(--low); clip-path:polygon(50% 100%, 0% 0%, 100% 0%); align-self:flex-end; }
-  .check-mark{ font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:4em; line-height:.9; color:var(--high); }
+  .lvl-low .wait-num{ color:var(--sick-green); text-shadow:0 0 6px rgba(126,245,66,.7), 0 0 16px rgba(126,245,66,.35), 1px 1px 0 #000; }
+  .lvl-med .wait-num{ color:var(--pumpkin); text-shadow:0 0 6px rgba(255,117,24,.7), 0 0 16px rgba(255,117,24,.35), 1px 1px 0 #000; }
+  .lvl-high .wait-num{ color:var(--blood-bright); text-shadow:0 0 6px rgba(255,42,58,.7), 0 0 16px rgba(255,42,58,.35), 1px 1px 0 #000; }
 
-  .lvl-low .wait-num{ color:var(--low); }
-  .lvl-med .wait-num{ color:var(--hazard); }
-  .lvl-high .wait-num{ color:var(--high); }
+  .lvl-open .wait-num{ color:var(--bone); font-size:clamp(14px, 3vh, 26px); }
 
-  .lvl-open .wait-row{ font-size:clamp(14px, 3vh, 26px); }
-  .lvl-open .wait-num{ color:var(--ink); }
+  .lvl-closed{ opacity:.5; }
+  .lvl-closed .wait-num{ color:var(--muted); font-size:clamp(13px, 2.6vh, 22px); }
 
-  .lvl-closed{ opacity:.6; }
-  .lvl-closed .wait-row{ font-size:clamp(13px, 2.6vh, 22px); }
-  .lvl-closed .wait-num{ color:var(--muted); }
-
-  .lvl-down .wait-row{ font-size:clamp(13px, 2.6vh, 22px); }
-  .lvl-down .wait-num{ color:var(--high); animation:flash 1s infinite; }
+  .lvl-down .wait-num{ color:var(--blood-bright); font-size:clamp(13px, 2.6vh, 22px); animation:flash 1s infinite; text-shadow:0 0 6px rgba(255,42,58,.7), 0 0 16px rgba(255,42,58,.35), 1px 1px 0 #000; }
   @keyframes flash{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
 
-  .lvl-missing{ opacity:.45; }
-  .lvl-missing .wait-row{ font-size:clamp(11px, 2vh, 18px); }
-  .lvl-missing .wait-num{ color:var(--muted); }
+  .lvl-missing{ opacity:.4; }
+  .lvl-missing .wait-num{ font-size:clamp(11px, 2vh, 18px); color:var(--muted); }
 
-  /* The "Closed" rubber stamp — used alone (down mid-event) and stacked
-     above the opens-at time below. Sized off the row's own font-size like
-     everything else in it. */
-  .stamp{
-    display:inline-block;
-    font-family:'IBM Plex Mono', monospace;
-    /* Fixed, not em — the row it sits in shrinks for the closed level, but
-       "Closed" still needs to stay readable rather than scale down with it. */
-    font-size:clamp(9px, 1.6vh, 12px);
-    font-weight:600;
-    letter-spacing:.1em;
-    color:var(--high);
-    border:2px solid var(--high);
-    border-radius:2px;
-    padding:3px 8px;
-    transform:rotate(-6deg);
-    text-transform:uppercase;
-    opacity:.85;
-  }
-
-  /* The opens-at block (closed, outside event hours) stacks the stamp above
-     a small "Opens at" label with the time itself bigger, in the hazard
-     accent instead of a glowing red. Sized off the closed-level row
-     font-size above. */
-  .wait-num.opens-at{ display:flex; flex-direction:column; align-items:center; gap:.35em; }
-  .opens-label{ font-family:'IBM Plex Mono', monospace; font-size:.7em; color:var(--muted); font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+  /* The opens-at block (closed, outside event hours) reuses .wait-num's grid
+     placement but stacks its own two lines: a small "Opens at" label at the
+     old opens-at text size, and the time itself bigger and glowing red. */
+  .wait-num.opens-at{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .opens-label{ font-size:clamp(11px, 1.8vh, 15px); color:var(--muted); font-weight:600; letter-spacing:.2px; }
   .opens-time{
-    font-family:'IBM Plex Mono', monospace; font-weight:700;
-    font-size:1.5em; line-height:1;
-    color:var(--hazard);
+    font-family:'Oswald', sans-serif; font-weight:700;
+    font-size:clamp(20px, 4.4vh, 34px); line-height:1;
+    color:var(--blood-bright);
+    text-shadow:0 0 8px rgba(255,42,58,.8), 0 0 18px rgba(255,42,58,.45);
   }
-
-  .key-overlay{
-    display:none;
-    position:fixed; inset:0; z-index:60;
-    background:rgba(14,12,9,.78);
-    align-items:center; justify-content:center;
-    padding:20px;
-  }
-  .key-overlay.open{ display:flex; }
-  .key-box{
-    background:var(--panel); border:1px solid var(--line); border-radius:8px;
-    padding:18px 20px; max-width:min(340px, 90vw);
-  }
-  .key-box h3{ margin:0 0 12px; font-family:'Staatliches', sans-serif; font-weight:400; font-size:15px; letter-spacing:.03em; text-transform:uppercase; text-align:center; color:var(--ink); }
 
   footer{
     flex:0 0 auto;
@@ -501,92 +348,52 @@
     font-size:clamp(8px, 1.2vh, 11px);
     line-height:1.4;
   }
-  footer a{ color:var(--hazard); }
+  footer a{ color:var(--pumpkin); }
 
   .kofi-slot{ display:flex; justify-content:center; }
+  .kofi-slot.menu-kofi{ margin-top:6px; padding:0 10px; }
   .copyright{ margin-top:8px; }
 
   /* Shared two-line share/donate block — same markup and classes on
      index.html, about.html, and projects.html. */
   .support-block{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:10px; }
   .support-line{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:0; }
-
-  /* Tighter than .support-block's own gap — the progress bar reads as a
-     caption on the donate button right above it, not a separate line.
-     Ko-fi's widget script also inserts an empty trailing <p></p> next to
-     the button it draws; hiding it removes the browser's default
-     paragraph margins that would otherwise widen this gap unpredictably. */
-  .donate-group{ display:flex; flex-direction:column; align-items:center; gap:0; }
-  .donate-group p:empty, .menu-donate p:empty{ display:none; }
-  .donation-progress{ width:100%; max-width:240px; margin-top:4px; }
-  .donation-progress-track{ background:var(--line); border-radius:8px; height:7px; overflow:hidden; }
-  .donation-progress-fill{ background:var(--hazard); height:100%; border-radius:8px; }
-  .donation-progress-label{ margin:6px 0 0; font-size:11.5px; color:var(--muted); text-align:center; }
-  .donation-progress-label strong{ color:var(--ink); }
-  .menu-donate{ display:flex; flex-direction:column; align-items:center; gap:0; width:100%; margin-top:6px; padding:0 10px; }
-  .menu-donate-line{ color:var(--muted); font-size:13px; margin:0 0 6px; }
   .link-btn{
-    background:none; border:1px solid var(--line); color:var(--hazard);
+    background:none; border:1px solid var(--card-border); color:var(--pumpkin);
     padding:4px 12px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:inherit;
     text-decoration:none; display:inline-block;
   }
-  .link-btn:hover{ border-color:var(--high); color:var(--high); }
+  .link-btn:hover{ border-color:var(--blood-bright); color:var(--blood-bright); }
 
   .legend{
     flex:0 0 auto;
-    display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:center;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px;
-    letter-spacing:.02em;
-    text-transform:uppercase;
+    display:flex; flex-wrap:wrap; gap:4px 14px; justify-content:center;
+    font-size:clamp(8px, 1.2vh, 11px);
     color:var(--muted);
   }
-  .legend span{ display:inline-flex; align-items:center; gap:6px; }
-  .legend i{ width:8px; height:8px; border-radius:2px; display:inline-block; flex:0 0 auto; }
-
-  /* Below the grid: just the legend the "?" key also shows — secondary
-     info, tucked under the cards instead of crowding the top controls
-     row. Refresh countdown moved back up into .status-bar, right next to
-     live status. */
-  .below-grid{ flex:0 0 auto; padding-top:10px; display:flex; flex-direction:column; align-items:center; gap:10px; }
-
-  .status-left{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
-  .refresh-line{
-    display:flex; align-items:center; gap:6px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px; letter-spacing:.02em;
-    color:var(--muted);
-  }
-  .refresh-line b{ color:var(--ink); font-weight:600; }
-  .icon-refresh-btn{
-    display:flex; align-items:center; justify-content:center;
-    width:24px; height:24px;
-    background:var(--panel); border:1px solid var(--high); border-radius:50%;
-    color:var(--high); cursor:pointer; padding:0;
-  }
-  .icon-refresh-btn:hover{ background:rgba(193,56,43,.15); }
-  .icon-refresh-btn svg{ width:13px; height:13px; }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; flex:0 0 auto; }
 
   /* Shared overlay/modal styling (hamburger menu + share modal) */
   .modal-overlay{
     position:fixed; inset:0; z-index:50;
-    background:rgba(14,12,9,.78);
+    background:rgba(0,0,0,.8);
     display:flex; align-items:center; justify-content:center;
     padding:20px;
   }
   .modal-overlay[hidden]{ display:none; }
   .modal-box{
     position:relative;
-    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    background:#0d0608; border:1px solid var(--card-border); border-radius:10px;
     padding:18px 20px; max-width:min(360px, 90vw); max-height:80vh; overflow:auto;
   }
-  .modal-box h3{ margin:0 0 4px; color:var(--ink); font-family:'Staatliches', sans-serif; font-weight:400; letter-spacing:.02em; text-transform:uppercase; font-size:16px; }
+  .modal-box h3{ margin:0 0 4px; color:var(--bone); font-size:15px; }
   .modal-close{
     position:absolute; top:8px; right:10px;
     background:none; border:none; color:var(--muted); font-size:22px; line-height:1;
     cursor:pointer; padding:2px 6px;
   }
-  .modal-close:hover{ color:var(--ink); }
+  .modal-close:hover{ color:var(--bone); }
 
   .share-box{ text-align:center; }
   .qr-image{
@@ -595,27 +402,27 @@
     background:#fff; padding:10px; border-radius:8px;
   }
   .share-link{ margin:0; font-size:13px; word-break:break-all; }
-  .share-link a{ color:var(--hazard); text-decoration:none; }
+  .share-link a{ color:var(--pumpkin); text-decoration:none; }
   .share-link a:hover{ text-decoration:underline; }
 
   .park-box{ text-align:center; max-width:min(340px, 90vw); }
   .park-box p{ color:var(--muted); font-size:12.5px; margin:4px 0 0; }
   .park-option{
     display:flex; flex-direction:column; align-items:center; gap:2px;
-    width:100%; background:var(--ground); border:1px solid var(--line); color:var(--ink);
-    font-family:inherit; padding:14px 16px; margin-top:10px; border-radius:8px; cursor:pointer;
+    width:100%; background:rgba(255,255,255,.02); border:1px solid var(--card-border); color:var(--bone);
+    font-family:inherit; padding:14px 16px; margin-top:10px; border-radius:10px; cursor:pointer;
     transition:border-color .15s ease, background .15s ease;
   }
-  .park-option:hover{ border-color:var(--high); background:rgba(193,56,43,.08); }
-  .park-option.current{ border-color:var(--hazard); }
+  .park-option:hover{ border-color:var(--blood-bright); background:rgba(255,42,58,.08); }
+  .park-option.current{ border-color:var(--pumpkin); }
   .park-option strong{ font-size:15px; }
   .park-option small{ color:var(--muted); font-size:11.5px; letter-spacing:.3px; }
 
-  .menu-overlay{ align-items:stretch; justify-content:flex-start; padding:0; background:rgba(14,12,9,.75); }
+  .menu-overlay{ align-items:stretch; justify-content:flex-start; padding:0; background:rgba(0,0,0,.7); }
   .menu-panel{
     position:relative;
     width:min(280px, 80vw); height:100%;
-    background:var(--panel); border-right:1px solid var(--line);
+    background:#0d0608; border-right:1px solid var(--card-border);
     padding:60px 20px 20px;
     display:flex; flex-direction:column; align-items:center; gap:6px;
     animation:slideIn .2s ease;
@@ -623,74 +430,18 @@
   @keyframes slideIn{ from{ transform:translateX(-100%); } to{ transform:translateX(0); } }
   .menu-panel a, .menu-panel button.menu-link{
     display:block; text-align:center;
-    background:none; border:none; color:var(--ink);
-    font-family:'IBM Plex Sans', sans-serif; font-size:15.5px; font-weight:500; letter-spacing:.01em;
+    background:none; border:none; color:var(--bone);
+    font-family:inherit; font-size:16px; letter-spacing:.3px;
     padding:12px 10px; border-radius:8px; cursor:pointer; text-decoration:none;
   }
-  .menu-panel a:hover, .menu-panel button.menu-link:hover{ background:rgba(245,166,35,.1); color:var(--hazard); }
+  .menu-panel a:hover, .menu-panel button.menu-link:hover{ background:rgba(255,42,58,.12); color:var(--blood-bright); }
   .menu-panel a[hidden]{ display:none; }
-
-  /* ─── Congrats modal + bat burst ─────────────────────────────────────── */
-  .congrats-box{
-    text-align:center; max-width:min(360px, 90vw);
-    border-color:var(--hazard); background:var(--page);
-    box-shadow:0 0 0 1px rgba(245,166,35,.25), 0 0 40px rgba(245,166,35,.18);
-    padding-top:14px;
-  }
-  .congrats-bats{ position:relative; height:62px; margin:0 0 4px; pointer-events:none; }
-  .congrats-bats svg{ position:absolute; display:block; }
-  .congrats-box h3{
-    font-family:'Nosifer', 'Creepster', cursive; font-weight:400; letter-spacing:.5px;
-    text-transform:none; font-size:26px; line-height:1.15; margin:6px 0 8px;
-    color:var(--high);
-    text-shadow:0 0 6px rgba(193,56,43,.7), 0 0 16px rgba(193,56,43,.35), 1px 1px 0 #000;
-  }
-  .congrats-box p{ color:var(--muted); font-size:13.5px; margin:0; }
-  .congrats-share-btn{
-    margin-top:18px; background:var(--hazard); border:none; color:#1a1208;
-    font-family:'IBM Plex Sans', sans-serif; font-weight:700; font-size:13.5px;
-    letter-spacing:.03em; text-transform:uppercase; padding:11px 28px;
-    border-radius:8px; cursor:pointer;
-  }
-  .congrats-share-btn:hover{ filter:brightness(1.08); }
-
-  .bat-burst-layer{
-    position:fixed; inset:0; z-index:59; pointer-events:none;
-    overflow:hidden;
-  }
-  .bat{
-    position:absolute; top:50%; left:50%; width:var(--bat-size);
-    transform:translate(-50%,-50%) rotate(var(--rot0)) scale(.25);
-    opacity:0;
-    animation:bat-burst var(--dur) cubic-bezier(.15,.6,.35,1) var(--delay) forwards;
-  }
-  .bat svg{ display:block; width:100%; height:auto; }
-  .bat-wings{ animation:bat-flap .16s ease-in-out infinite alternate; transform-origin:50% 50%; }
-  @keyframes bat-flap{
-    from{ transform:scaleY(1); }
-    to{ transform:scaleY(.55); }
-  }
-  @keyframes bat-burst{
-    0%{ transform:translate(-50%,-50%) rotate(var(--rot0)) scale(.25); opacity:0; }
-    12%{ opacity:1; }
-    70%{ opacity:1; }
-    100%{
-      transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--rot1)) scale(var(--scale1));
-      opacity:0;
-    }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .bat{ animation:none; opacity:0; }
-  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu"><span></span><span></span><span></span></button>
-    <div class="mark-col">
-      <h1>HHN Wait Tracker</h1>
-    </div>
     <div class="view-toggle" id="view-toggle" role="tablist" aria-label="Switch between houses and rides">
       <div class="view-toggle-thumb" id="view-toggle-thumb"></div>
       <button type="button" class="view-toggle-btn active" id="view-btn-houses" data-view="houses" role="tab" aria-selected="true" aria-label="Houses">
@@ -711,98 +462,60 @@
         </svg>
       </button>
     </div>
+    <h1>HHN Wait Tracker</h1>
+    <div class="subtitle" id="subtitle">Live House Wait Times and Tracker</div>
+    <div class="subtitle" id="park-hours-line"></div>
   </header>
 
-  <div class="subtitle" id="subtitle">Live House Wait Times and Tracker</div>
-  <div class="subtitle" id="park-hours-line"></div>
-
   <div class="status-bar">
-    <span class="status-left">
-      <span class="live-status">
-        <span class="dot live" id="status-dot"></span><b id="status-text">Connecting…</b>
-      </span>
-      <span class="refresh-line">
-        <span>Refreshes in: <b id="countdown">30</b>s</span>
-        <button type="button" id="refresh-btn" class="icon-refresh-btn" aria-label="Refresh now">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 11A8 8 0 1 0 19 15"/>
-            <path d="M20 5v6h-6"/>
-          </svg>
-        </button>
-      </span>
-    </span>
-    <span class="status-controls">
+    <span><span class="dot live" id="status-dot"></span><b id="status-text">Connecting…</b></span>
+    <span>Last updated: <b id="last-updated">N/A</b></span>
+    <span>Next refresh: <b id="countdown">30</b>s</span>
+    <span><button id="refresh-btn" class="btn">Refresh Now</button></span>
+    <span class="sort-control">
+      <span class="sort-label">Sort</span>
       <div class="dropdown" id="sort-dropdown">
-        <button class="dropdown-btn" id="sort-dropdown-btn" aria-haspopup="true" aria-expanded="false">
-          <span id="sort-dropdown-label">Wait</span>
+        <button class="dropdown-btn" id="sort-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span id="sort-dropdown-label">Wait Time</span>
           <span class="caret">&#9662;</span>
         </button>
-        <div class="dropdown-list" id="sort-dropdown-list" hidden>
-          <ul role="listbox">
-            <li data-mode="wait" role="option" class="selected">Wait Time<span class="tick">&#10003;</span></li>
-            <li data-mode="alpha" role="option">Alphabetical<span class="tick">&#10003;</span></li>
-            <li data-mode="custom" role="option">Custom<span class="tick">&#10003;</span></li>
-          </ul>
-          <div class="dropdown-divider"></div>
-          <div class="dir-row">
-            <span>Direction</span>
-            <button class="btn dir-toggle" id="dir-toggle" title="Toggle sort direction">Z&rarr;A</button>
-          </div>
-        </div>
+        <ul class="dropdown-list" id="sort-dropdown-list" role="listbox" hidden>
+          <li data-mode="wait" role="option" class="selected">Wait Time</li>
+          <li data-mode="alpha" role="option">Alphabetical</li>
+          <li data-mode="custom" role="option">Custom</li>
+        </ul>
       </div>
-      <button type="button" class="btn key-btn" id="key-btn" aria-label="Show wait-time key">?</button>
+      <button class="btn dir-toggle" id="dir-toggle" title="Toggle sort direction">Z&rarr;A</button>
     </span>
   </div>
 
   <div id="error-banner"></div>
 
-  <div class="hazard-rule"></div>
+  <div class="legend">
+    <span><i style="background:var(--sick-green)"></i> Short wait</span>
+    <span><i style="background:var(--pumpkin)"></i> Moderate wait</span>
+    <span><i style="background:var(--blood-bright)"></i> Long wait</span>
+    <span><i style="background:var(--muted)"></i> Closed / not open yet</span>
+  </div>
 
   <div class="grid" id="grid"></div>
-
-  <div class="below-grid">
-    <div class="legend">
-      <span><i style="background:var(--low)"></i> Short wait</span>
-      <span><i style="background:var(--hazard)"></i> Moderate wait</span>
-      <span><i style="background:var(--high)"></i> Long wait</span>
-      <span><i style="background:var(--muted)"></i> Closed / not open yet</span>
-    </div>
-  </div>
 
   <footer>
     Unofficial fan dashboard · data via <a href="https://themeparks.wiki/" target="_blank" rel="noopener">themeparks.wiki</a> · not affiliated with Universal Parks &amp; Resorts · tap a house to mark it done
 
     <div class="support-block">
       <p class="support-line">If you like this service: <button type="button" class="link-btn" id="footer-share-btn">Share it!</button></p>
-      <div class="donate-group">
-        <p class="support-line">
-          If you love it:
-          <span class="kofi-slot">
-            <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-            <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
-          </span>
-        </p>
-        <div class="donation-progress" aria-label="Season donation goal progress">
-          <div class="donation-progress-track"><div class="donation-progress-fill" style="width:10%"></div></div>
-          <p class="donation-progress-label"><strong>$45.14</strong> raised of <strong>$450</strong> season goal</p>
-        </div>
-      </div>
+      <p class="support-line">
+        If you love it:
+        <span class="kofi-slot">
+          <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+          <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
+        </span>
+      </p>
     </div>
 
     <p class="copyright">&copy; 2026 <a href="https://digitalelegance.com" target="_blank" rel="noopener">Digital Elegance LLC</a></p>
   </footer>
-</div>
-
-<div class="key-overlay" id="key-overlay">
-  <div class="key-box">
-    <h3>Wait-time key</h3>
-    <div class="legend">
-      <span><i style="background:var(--low)"></i> Short wait</span>
-      <span><i style="background:var(--hazard)"></i> Moderate wait</span>
-      <span><i style="background:var(--high)"></i> Long wait</span>
-      <span><i style="background:var(--muted)"></i> Closed / not open yet</span>
-    </div>
-  </div>
 </div>
 
 <div class="modal-overlay menu-overlay" id="menu-overlay" hidden>
@@ -813,16 +526,9 @@
     <button type="button" class="menu-link" id="menu-share-btn">Share</button>
     <a href="projects.html">More Projects</a>
     <button type="button" class="menu-link" id="menu-park-btn">Change Park</button>
-    <div class="menu-donate">
-      <p class="menu-donate-line">If you love it:</p>
-      <div class="kofi-slot">
-        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-        <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
-      </div>
-      <div class="donation-progress" aria-label="Season donation goal progress">
-        <div class="donation-progress-track"><div class="donation-progress-fill" style="width:10%"></div></div>
-        <p class="donation-progress-label"><strong>$45.14</strong> raised of <strong>$450</strong> season goal</p>
-      </div>
+    <div class="kofi-slot menu-kofi">
+      <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+      <script type='text/javascript'>kofiwidget2.init('Buy Me A Skull Pie', '#000000', 'I4J726JOR0');kofiwidget2.draw();</script>
     </div>
   </nav>
 </div>
@@ -852,24 +558,6 @@
     <button type="button" class="link-btn" id="share-native-btn" style="margin-top:14px;" hidden>Share&hellip;</button>
   </div>
 </div>
-
-<div class="modal-overlay" id="congrats-overlay" hidden>
-  <div class="modal-box congrats-box">
-    <button class="modal-close" id="congrats-close" aria-label="Close">&times;</button>
-    <div class="congrats-bats" aria-hidden="true">
-      <svg style="left:6%; top:42%; width:40px; height:10px; transform:rotate(-8deg);" viewBox="0 0 64 16" fill="#3a3a3a"><path d="M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z"/></svg>
-      <svg style="left:20%; top:2%; width:28px; height:7px; transform:rotate(10deg);" viewBox="0 0 64 16" fill="#2a2a2a"><path d="M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z"/></svg>
-      <svg style="left:38%; top:30%; width:52px; height:13px; transform:rotate(-4deg);" viewBox="0 0 64 16" fill="#444"><path d="M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z"/></svg>
-      <svg style="left:62%; top:0%; width:32px; height:8px; transform:rotate(6deg);" viewBox="0 0 64 16" fill="#3a3a3a"><path d="M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z"/></svg>
-      <svg style="left:78%; top:38%; width:34px; height:8.5px; transform:rotate(-12deg);" viewBox="0 0 64 16" fill="#2a2a2a"><path d="M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z"/></svg>
-    </div>
-    <h3>FEAR CONQUERED!</h3>
-    <p>You survived each of this year's houses.</p><p>Go brag about it.</p>
-    <button type="button" class="congrats-share-btn" id="congrats-share-btn">Share</button>
-  </div>
-</div>
-<canvas id="congrats-share-canvas" width="1080" height="1080" hidden aria-hidden="true"></canvas>
-<div class="bat-burst-layer" id="bat-burst-layer" aria-hidden="true"></div>
 
 <script>
 const POLL_SECONDS = 30; // matches the cron job's refresh cadence — see scripts/fetch-live-data.sh
@@ -902,12 +590,6 @@ const PARKS = {
     // its own `opensAt`. Per WDWNT's HHN 35 guide: event runs 6:30 PM-2:00 AM,
     // with houses opening in phases from 2 PM.
     hours: { open: '18:30', close: '02:00' },
-    // Days of week (0=Sun..6=Sat) HHN actually runs — no Monday or Tuesday
-    // nights this season. Drives both isWithinEventHours() (so a Tuesday
-    // evening doesn't get treated as a live event just because it falls in
-    // the nightly clock window) and nextOpenInfo()'s "opens at" date (so a
-    // Monday/Tuesday check correctly points at Wednesday, not tomorrow).
-    eventDays: [0, 3, 4, 5, 6],
     houses: [
       { name: 'Sinners', keywords: ['sinners'], opensAt: '17:15' },
       { name: 'Hellraiser', keywords: ['hellraiser'], opensAt: '14:00' },
@@ -937,9 +619,6 @@ const PARKS = {
     stateCookie: 'hhn_state_hollywood',
     // Event runs 7:00 PM-2:00 AM; all houses open at 5:30 PM Early Access.
     hours: { open: '19:00', close: '02:00' },
-    // No `eventDays` here — Hollywood's specific off-nights this season
-    // aren't confirmed, so it falls back to "every day" in isEventDay().
-    // Add the same [0,3,4,5,6]-style array here once that's known.
     houses: [
       { name: 'Sinners', keywords: ['sinners'], opensAt: '17:30' },
       { name: 'Ozzy Osbourne: Prince of Darkness', keywords: ['ozzy osbourne', 'prince of darkness'], opensAt: '17:30' },
@@ -1005,8 +684,7 @@ const state = {
   houseState: {},
   order: [],
   entities: null,
-  isAnimating: false,
-  celebrated: false
+  isAnimating: false
 };
 
 // Resets state to defaults for whichever park is currently loaded in HOUSES.
@@ -1025,7 +703,6 @@ function resetState() {
   }
   state.order = HOUSES.map(h => h.codeId);
   state.isAnimating = false;
-  state.celebrated = false;
 }
 
 function encodeState() {
@@ -1134,53 +811,31 @@ function parkNowParts() {
   };
 }
 
-// Day-of-week gate (0=Sun..6=Sat) for whether HHN actually runs that
-// night — Orlando skips Monday/Tuesday this season (see PARKS.orlando's
-// `eventDays`); a park with no `eventDays` set runs every day.
-function isEventDay(dow) {
-  const days = PARKS[currentParkId].eventDays;
-  return days ? days.includes(dow) : true;
-}
-
-// Pure calendar-date day-of-week, matching the park's own local date parts
-// (no timezone conversion — parkNowParts() already resolved those).
-function dowFor(year, month, day) {
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-}
-
-// Finds the next real occurrence of a house's "HH:MM" opening time in the
-// park's own time zone: today only counts if today is an actual event day
-// (see isEventDay) and this time hasn't passed yet; otherwise it walks
-// forward, skipping any non-event day (e.g. from a Tuesday check, this
-// lands on Wednesday, not "tomorrow"). Shared by the opens-at card text and
-// by the wait-time sort's "soonest opening first" ordering.
+// Finds the next occurrence of a house's "HH:MM" opening time in the park's
+// own time zone — today if it hasn't passed yet there, otherwise tomorrow
+// (park-local calendar day). Shared by the opens-at card text and by the
+// wait-time sort's "soonest opening first" ordering.
 function nextOpenInfo(opensAtHHMM) {
   const [h, m] = opensAtHHMM.split(':').map(Number);
   const now = parkNowParts();
   const nowMin = now.hour * 60 + now.minute;
   const targetMin = h * 60 + m;
+  const rolled = targetMin <= nowMin;
+  const minutesUntil = rolled ? (targetMin - nowMin + 1440) : (targetMin - nowMin);
 
-  let daysAhead = 0;
-  while (true) {
-    const d = new Date(Date.UTC(now.year, now.month - 1, now.day + daysAhead));
-    const dow = d.getUTCDay();
-    const stillAhead = daysAhead > 0 || targetMin > nowMin;
-    if (isEventDay(dow) && stillAhead) {
-      return {
-        hour: h, minute: m,
-        isToday: daysAhead === 0,
-        year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
-        minutesUntil: daysAhead * 1440 + targetMin - nowMin
-      };
-    }
-    daysAhead++;
+  let year = now.year, month = now.month, day = now.day;
+  if (rolled) {
+    // Pure calendar-day rollover math — these y/m/d values are just being
+    // treated as a date, not converted between time zones.
+    const rolledDate = new Date(Date.UTC(year, month - 1, day + 1));
+    year = rolledDate.getUTCFullYear();
+    month = rolledDate.getUTCMonth() + 1;
+    day = rolledDate.getUTCDate();
   }
+
+  return { hour: h, minute: m, isToday: !rolled, year, month, day, minutesUntil };
 }
 
-// The date only shows up when the next real opening isn't today — which
-// now correctly accounts for HHN's actual nightly schedule via
-// nextOpenInfo() (e.g. a Tuesday check shows Wednesday's date, not a bare
-// time, and that date disappears again once Wednesday itself arrives).
 function formatOpensNote(opensAtHHMM) {
   const info = nextOpenInfo(opensAtHHMM);
   const time = formatTime12(info.hour, info.minute);
@@ -1193,11 +848,7 @@ function formatOpensNote(opensAtHHMM) {
 }
 
 // True while the park's own local time falls inside its nightly event
-// window AND tonight is an actual HHN night. Handles windows that cross
-// midnight (e.g. 18:30–02:00): the early-morning sliver before `close`
-// belongs to *yesterday's* event, so on that side the day check looks at
-// yesterday, not today (e.g. Monday 1 AM is still live because Sunday was
-// an event night; Wednesday 1 AM is not, because Tuesday wasn't).
+// window. Handles windows that cross midnight (e.g. 18:30–02:00).
 function isWithinEventHours(hours) {
   const [oh, om] = hours.open.split(':').map(Number);
   const [ch, cm] = hours.close.split(':').map(Number);
@@ -1205,13 +856,10 @@ function isWithinEventHours(hours) {
   const closeMin = ch * 60 + cm;
   const now = parkNowParts();
   const nowMin = now.hour * 60 + now.minute;
-  const todayDow = dowFor(now.year, now.month, now.day);
-
   if (closeMin <= openMin) {
-    if (nowMin < closeMin) return isEventDay((todayDow + 6) % 7);
-    return nowMin >= openMin && isEventDay(todayDow);
+    return nowMin >= openMin || nowMin < closeMin;
   }
-  return nowMin >= openMin && nowMin < closeMin && isEventDay(todayDow);
+  return nowMin >= openMin && nowMin < closeMin;
 }
 
 // ─── Live data matching (unchanged logic) ──────────────────────────────────
@@ -1471,13 +1119,7 @@ function renderContent() {
     // so there's no meaningful opening time to promise.
     const showOpensAt = level === 'closed' && !withinHours && !hs.completed;
 
-    // The single longest current wait gets the deep blood accent — only
-    // meaningful while actually sorted by wait time, descending, and only
-    // for a house that has a real numeric wait (not closed/down/no-data).
-    const isRank1 = state.mode === 'wait' && state.direction === 'desc'
-      && !hs.completed && typeof info.wait === 'number' && state.order[0] === house.codeId;
-
-    card.className = 'card lvl-' + level + (hs.completed ? ' completed' : '') + (isRank1 ? ' rank1' : '');
+    card.className = 'card lvl-' + level + (hs.completed ? ' completed' : '');
 
     const waitRow = card.querySelector('.wait-row');
     waitRow.innerHTML = '';
@@ -1493,11 +1135,6 @@ function renderContent() {
 
       const wrap = document.createElement('div');
       wrap.className = 'wait-num opens-at';
-
-      const stamp = document.createElement('span');
-      stamp.className = 'stamp';
-      stamp.textContent = 'Closed';
-      wrap.appendChild(stamp);
 
       const labelEl = document.createElement('div');
       labelEl.className = 'opens-label';
@@ -1522,34 +1159,20 @@ function renderContent() {
       // dragging, etc.) instead of only for the single render right after
       // the change was detected.
       if (hs.trend) {
-        // A solid CSS triangle (see .trend-arrow), not a text glyph — see
-        // the trend-arrow rule for why. Wrapped in .trend-cluster (its own
-        // grid column) so the number's centering never depends on whether
-        // an arrow is here.
-        const cluster = document.createElement('span');
-        cluster.className = 'trend-cluster';
         const arrow = document.createElement('span');
         arrow.className = 'trend-arrow ' + hs.trend;
-        cluster.appendChild(arrow);
-        waitRow.appendChild(cluster);
+        arrow.textContent = hs.trend === 'up' ? '▲' : '▼';
+        waitRow.appendChild(arrow);
       }
     } else if (info.text) {
       const num = document.createElement('span');
       num.className = 'wait-num';
       num.textContent = info.text;
       waitRow.appendChild(num);
-    } else if (level === 'closed') {
-      // The rubber-stamp treatment for a plain "Closed" (no opens-at time
-      // to show, e.g. down mid-event) — same stamp used on the opens-at
-      // variant below.
-      const stamp = document.createElement('span');
-      stamp.className = 'stamp';
-      stamp.textContent = 'Closed';
-      waitRow.appendChild(stamp);
     } else {
       const num = document.createElement('span');
       num.className = 'wait-num';
-      num.textContent = info.label;
+      num.textContent = level === 'closed' ? 'Closed' : info.label;
       waitRow.appendChild(num);
     }
   }
@@ -1765,21 +1388,11 @@ function toggleCompleted(codeId) {
   state.order = newOrder;
   positionCards(newOrder, {});
   saveState();
-
-  const allDone = HOUSES.length > 0 && HOUSES.every(h => state.houseState[h.codeId].completed);
-  if (allDone && !state.celebrated) {
-    state.celebrated = true;
-    openCongratsModal();
-  } else if (!allDone) {
-    // Un-checking a house after a full sweep resets the flag, so finishing
-    // the lineup again later re-triggers the celebration.
-    state.celebrated = false;
-  }
 }
 
 // ─── Sort dropdown + direction toggle ──────────────────────────────────────
 
-const MODE_LABELS = { wait: 'Wait', alpha: 'A–Z', custom: 'Custom' };
+const MODE_LABELS = { wait: 'Wait Time', alpha: 'Alphabetical', custom: 'Custom' };
 
 function updateSortDropdownLabel() {
   document.getElementById('sort-dropdown-label').textContent = MODE_LABELS[state.mode];
@@ -1832,16 +1445,6 @@ document.getElementById('menu-close').addEventListener('click', () => {
 });
 document.getElementById('menu-overlay').addEventListener('click', (e) => {
   if (e.target.id === 'menu-overlay') e.currentTarget.hidden = true;
-});
-
-// ─── Wait-time key popover ──────────────────────────────────────────────────
-
-document.getElementById('key-btn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('key-overlay').classList.toggle('open');
-});
-document.getElementById('key-overlay').addEventListener('click', () => {
-  document.getElementById('key-overlay').classList.remove('open');
 });
 
 const SHARE_URL = 'https://digitalelegance.com/hhn';
@@ -1906,186 +1509,12 @@ document.getElementById('menu-park-btn').addEventListener('click', () => {
   openParkModal({ forced: false });
 });
 
-// ─── Congrats modal + bat burst ─────────────────────────────────────────────
-// Fires once per full sweep of the checklist (see toggleCompleted). Bats are
-// plain divs with an inline SVG bat shape, launched from screen-center with
-// randomized angle/distance/rotation/timing so the burst doesn't look
-// mechanical, then removed once their animation finishes.
-
-const BAT_SVG = '<svg viewBox="0 0 64 16" class="bat-wings"><path d="M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z"/></svg>';
-const BAT_COLORS = ['#0d0d0d', '#1c1c1c', '#2b2b2b', '#3a3a3a', '#4a4a4a'];
-
-function spawnBatBurst(count) {
-  const layer = document.getElementById('bat-burst-layer');
-  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReducedMotion) return;
-
-  for (let i = 0; i < count; i++) {
-    const bat = document.createElement('div');
-    bat.className = 'bat';
-    bat.innerHTML = BAT_SVG;
-    bat.querySelector('svg').style.fill = BAT_COLORS[Math.floor(Math.random() * BAT_COLORS.length)];
-
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 140 + Math.random() * 320;
-    const tx = Math.cos(angle) * distance;
-    // Bias slightly downward so the burst reads more like fluttering bats
-    // falling away than a symmetrical firework.
-    const ty = Math.sin(angle) * distance + 60 + Math.random() * 80;
-    const size = 22 + Math.random() * 26;
-    const dur = 1800 + Math.random() * 1400;
-    const delay = Math.random() * 350;
-    const rot0 = (Math.random() * 60 - 30).toFixed(1);
-    const rot1 = (Math.random() * 240 - 120).toFixed(1);
-    const scale1 = (0.6 + Math.random() * 0.7).toFixed(2);
-
-    bat.style.setProperty('--bat-size', size + 'px');
-    bat.style.setProperty('--tx', tx.toFixed(1) + 'px');
-    bat.style.setProperty('--ty', ty.toFixed(1) + 'px');
-    bat.style.setProperty('--dur', dur.toFixed(0) + 'ms');
-    bat.style.setProperty('--delay', delay.toFixed(0) + 'ms');
-    bat.style.setProperty('--rot0', rot0 + 'deg');
-    bat.style.setProperty('--rot1', rot1 + 'deg');
-    bat.style.setProperty('--scale1', scale1);
-
-    layer.appendChild(bat);
-    bat.addEventListener('animationend', () => bat.remove());
-  }
-}
-
-function openCongratsModal() {
-  document.getElementById('congrats-overlay').hidden = false;
-  spawnBatBurst(28);
-}
-
-function closeCongratsModal() {
-  document.getElementById('congrats-overlay').hidden = true;
-  document.getElementById('bat-burst-layer').innerHTML = '';
-}
-
-document.getElementById('congrats-close').addEventListener('click', closeCongratsModal);
-document.getElementById('congrats-overlay').addEventListener('click', (e) => {
-  if (e.target.id === 'congrats-overlay') closeCongratsModal();
-});
-
-// ─── Congrats share card ────────────────────────────────────────────────────
-// Draws a standalone image (not a literal screenshot of the modal) so the
-// shared result looks good regardless of the visitor's screen size/theme.
-
-const CONGRATS_SHARE_TEXT = "I conquered my fears, now it's your turn.";
-const CONGRATS_BAT_PATH = new Path2D('M32 16c-3-8-14-14-14-6 0-4-8-2-8 4 6-2 10 0 12 4 2-4 2-8 4-8s2 4 4 8c2-4 6-6 12-4 0-6-8-8-8-4 0-8-11-2-14 6z');
-
-function wrapCenteredText(ctx, text, cx, startY, maxWidth, lineHeight) {
-  const words = text.split(' ');
-  let line = '';
-  let y = startY;
-  for (const word of words) {
-    const test = line ? line + ' ' + word : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      ctx.fillText(line, cx, y);
-      line = word;
-      y += lineHeight;
-    } else {
-      line = test;
-    }
-  }
-  if (line) ctx.fillText(line, cx, y);
-  return y;
-}
-
-async function buildCongratsShareBlob() {
-  const canvas = document.getElementById('congrats-share-canvas');
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  if (document.fonts && document.fonts.ready) {
-    try { await document.fonts.ready; } catch (e) {}
-  }
-
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#0e0c09';
-  ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = 'rgba(245,166,35,.55)';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(24, 24, w - 48, h - 48);
-
-  const batColors = ['#2a2a2a', '#111111', '#3a3a3a', '#1c1c1c'];
-  for (let i = 0; i < 14; i++) {
-    const x = 100 + Math.random() * (w - 200);
-    const y = 90 + Math.random() * 200;
-    const scale = 1.4 + Math.random() * 2.2;
-    const rot = Math.random() * 40 - 20;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot * Math.PI / 180);
-    ctx.scale(scale, scale);
-    ctx.translate(-32, -8);
-    ctx.fillStyle = batColors[i % batColors.length];
-    ctx.fill(CONGRATS_BAT_PATH);
-    ctx.restore();
-  }
-
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#c1382b';
-  ctx.shadowColor = 'rgba(193,56,43,.6)';
-  ctx.shadowBlur = 24;
-  ctx.font = "700 84px 'Nosifer', 'Creepster', sans-serif";
-  const headlineEndY = wrapCenteredText(ctx, 'FEAR CONQUERED!', w / 2, 460, w - 140, 100);
-  ctx.shadowBlur = 0;
-
-  ctx.fillStyle = '#ece4d6';
-  ctx.font = "600 36px 'IBM Plex Sans', sans-serif";
-  wrapCenteredText(ctx, "You survived each of this year's houses.", w / 2, headlineEndY + 90, w - 220, 48);
-
-  ctx.fillStyle = '#f5a623';
-  ctx.font = "700 34px 'IBM Plex Sans', sans-serif";
-  wrapCenteredText(ctx, CONGRATS_SHARE_TEXT, w / 2, 860, w - 220, 44);
-
-  ctx.fillStyle = '#948a7a';
-  ctx.font = "500 28px 'IBM Plex Mono', monospace";
-  ctx.fillText(SHARE_URL.replace(/^https?:\/\//, ''), w / 2, 940);
-
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-}
-
-document.getElementById('congrats-share-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('congrats-share-btn');
-  btn.disabled = true;
-  try {
-    const blob = await buildCongratsShareBlob();
-    const file = blob ? new File([blob], 'fear-conquered.png', { type: 'image/png' }) : null;
-
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'HHN Wait Tracker', text: CONGRATS_SHARE_TEXT + ' ' + SHARE_URL });
-    } else if (navigator.share) {
-      await navigator.share({ title: 'HHN Wait Tracker', text: CONGRATS_SHARE_TEXT, url: SHARE_URL });
-    } else if (blob) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'fear-conquered.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(CONGRATS_SHARE_TEXT + ' ' + SHARE_URL).catch(() => {});
-      }
-    }
-  } catch (err) {
-    // Share sheet cancelled or unsupported — nothing to do.
-  } finally {
-    btn.disabled = false;
-  }
-});
-
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   document.getElementById('share-overlay').hidden = true;
   document.getElementById('menu-overlay').hidden = true;
   document.getElementById('sort-dropdown-list').hidden = true;
-  document.getElementById('key-overlay').classList.remove('open');
   if (!document.getElementById('park-close').hidden) closeParkModal();
-  closeCongratsModal();
 });
 
 // ─── Polling ────────────────────────────────────────────────────────────────
@@ -2143,6 +1572,7 @@ async function fetchLiveData() {
     dot.className = 'dot live';
     statusText.textContent = 'Live';
     errorBanner.style.display = 'none';
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
     return true;
   } catch (err) {
     dot.className = 'dot err';
@@ -2246,17 +1676,15 @@ function sideForView(view) {
   return view === 'rides' ? 'right' : 'left';
 }
 
-// Slides the pill's highlight to whichever button matches `view`. Its own
-// CSS transition (.2s, see .view-toggle-thumb) always drives the speed —
-// this used to be stretched out to match the much longer card
-// fly-animation, which made a small local toggle feel sluggish.
-function updatePillThumb(view) {
+// Slides the pill's highlight to whichever button matches `view`, over
+// `durationMs` — called once at the very start of switchView with the full
+// card-animation duration, so the pill and the grid finish at the same time.
+function updatePillThumb(view, durationMs) {
   const thumb = document.getElementById('view-toggle-thumb');
   const housesBtn = document.getElementById('view-btn-houses');
   const targetBtn = view === 'rides' ? document.getElementById('view-btn-rides') : housesBtn;
-  // The pill stacks vertically now, so the thumb slides along Y between
-  // the two buttons' offsetTop instead of X/offsetLeft.
-  thumb.style.transform = 'translateY(' + (targetBtn.offsetTop - housesBtn.offsetTop) + 'px)';
+  thumb.style.transitionDuration = durationMs + 'ms';
+  thumb.style.transform = 'translateX(' + (targetBtn.offsetLeft - housesBtn.offsetLeft) + 'px)';
 }
 
 // Snaps the pill straight back to "houses" with no animation — used when a
@@ -2264,7 +1692,7 @@ function updatePillThumb(view) {
 function resetPillThumb() {
   const thumb = document.getElementById('view-toggle-thumb');
   thumb.style.transition = 'none';
-  thumb.style.transform = 'translateY(0)';
+  thumb.style.transform = 'translateX(0)';
   // eslint-disable-next-line no-unused-expressions
   thumb.offsetHeight;
   thumb.style.transition = '';
@@ -2278,7 +1706,8 @@ async function switchView(view) {
   const enterSide = sideForView(view);
 
   const newItems = view === 'rides' ? PARKS[currentParkId].rides : PARKS[currentParkId].houses;
-  updatePillThumb(view);
+  const totalDuration = 500 + 450 + 40 + 450 + 1000 + newItems.length * 80;
+  updatePillThumb(view, totalDuration);
 
   const subtitleEls = [document.getElementById('subtitle'), document.getElementById('park-hours-line')];
   const textExitDuration = 950; // matches the card gather (500) + fling (450) below
@@ -2410,21 +1839,10 @@ async function switchView(view) {
   saveState();
 }
 
-// One listener on the whole pill, not just its two small buttons — a tap
-// anywhere on the switch (padding, gap, either icon) flips it to the other
-// view, so there's no dead zone to miss.
-document.getElementById('view-toggle').addEventListener('click', () => {
-  switchView(currentView === 'houses' ? 'rides' : 'houses');
-});
+document.getElementById('view-btn-houses').addEventListener('click', () => switchView('houses'));
+document.getElementById('view-btn-rides').addEventListener('click', () => switchView('rides'));
 
 let bootParkId = getCookie(PARK_COOKIE);
-// A shared link (e.g. "?park=orlando") names the park up front so a
-// first-time visitor lands straight on live data instead of the picker.
-const urlParkId = new URLSearchParams(location.search).get('park');
-if ((urlParkId === 'orlando' || urlParkId === 'hollywood') && urlParkId !== bootParkId) {
-  bootParkId = urlParkId;
-  setCookie(PARK_COOKIE, bootParkId, COOKIE_DAYS);
-}
 if (!bootParkId && getCookie('hhn_state')) {
   // Back-compat: a legacy hhn_state cookie with no park choice yet means this
   // visitor was already using the (Orlando-only) tracker before the park
@@ -2454,27 +1872,6 @@ if (new URLSearchParams(location.search).has('share')) {
   showShare();
   history.replaceState(null, '', location.pathname);
 }
-</script>
-<script>
-// Progressive enhancement over the static "$45.14 of $450" markup already
-// in the HTML above: if this fetch succeeds it overwrites those numbers
-// with the live total from scripts/kofi-webhook.js; if it fails (file not
-// deployed yet, offline, etc.) the static fallback just stays put.
-(function(){
-  fetch('data/donation-total.json', { cache: 'no-store' })
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){
-      if (!d || typeof d.raised !== 'number' || typeof d.goal !== 'number') return;
-      var pct = Math.max(0, Math.min(100, (d.raised / d.goal) * 100));
-      document.querySelectorAll('.donation-progress').forEach(function(el){
-        var fill = el.querySelector('.donation-progress-fill');
-        var label = el.querySelector('.donation-progress-label');
-        if (fill) fill.style.width = pct.toFixed(1) + '%';
-        if (label) label.innerHTML = '<strong>$' + d.raised.toFixed(2) + '</strong> raised of <strong>$' + d.goal + '</strong> season goal';
-      });
-    })
-    .catch(function(){});
-})();
 </script>
 </body>
 </html>
